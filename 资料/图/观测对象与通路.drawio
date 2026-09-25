@@ -1,0 +1,181 @@
+<mxfile host="app.diagrams.net" type="device">
+  <diagram id="d1" name="Page-1">
+    <mxGraphModel dx="1120" dy="798" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1120" pageHeight="798" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="t3" value="观测对象 × 通路 —— 六类东西、四条通路" style="text;html=1;align=center;verticalAlign=middle;fontSize=22;fontFamily=Microsoft YaHei;fontColor=#1e40af" vertex="1" parent="1">
+          <mxGeometry x="375.0" y="41.2" width="410.1" height="27.5" as="geometry"/>
+        </mxCell>
+        <mxCell id="ch0" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#a5d8ff;strokeColor=#1e1e1e;strokeWidth=2" vertex="1" parent="1">
+          <mxGeometry x="400.0" y="110.0" width="175.0" height="90.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="ch0-t" value="A 645/698 帧&lt;br&gt;不停核" style="text;html=1;align=center;verticalAlign=middle;fontSize=15;fontFamily=Microsoft YaHei;fontColor=#1f2937" vertex="1" parent="1">
+          <mxGeometry x="441.0" y="136.2" width="93.0" height="37.5" as="geometry"/>
+        </mxCell>
+        <mxCell id="ch1" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#d0bfff;strokeColor=#1e1e1e;strokeWidth=2" vertex="1" parent="1">
+          <mxGeometry x="575.0" y="110.0" width="175.0" height="90.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="ch1-t" value="B AA80 读内存&lt;br&gt;不停核" style="text;html=1;align=center;verticalAlign=middle;fontSize=15;fontFamily=Microsoft YaHei;fontColor=#1f2937" vertex="1" parent="1">
+          <mxGeometry x="612.7" y="136.2" width="99.6" height="37.5" as="geometry"/>
+        </mxCell>
+        <mxCell id="ch2" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#c3fae8;strokeColor=#1e1e1e;strokeWidth=2" vertex="1" parent="1">
+          <mxGeometry x="750.0" y="110.0" width="175.0" height="90.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="ch2-t" value="C SWD 直读&lt;br&gt;不停核" style="text;html=1;align=center;verticalAlign=middle;fontSize=15;fontFamily=Microsoft YaHei;fontColor=#1f2937" vertex="1" parent="1">
+          <mxGeometry x="799.1" y="136.2" width="76.8" height="37.5" as="geometry"/>
+        </mxCell>
+        <mxCell id="ch3" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#ffc9c9;strokeColor=#c0392b;strokeWidth=3" vertex="1" parent="1">
+          <mxGeometry x="925.0" y="110.0" width="175.0" height="90.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="ch3-t" value="D gdb 断点&lt;br&gt;停核" style="text;html=1;align=center;verticalAlign=middle;fontSize=15;fontFamily=Microsoft YaHei;fontColor=#1f2937" vertex="1" parent="1">
+          <mxGeometry x="974.1" y="136.2" width="76.8" height="37.5" as="geometry"/>
+        </mxCell>
+        <mxCell id="rh0" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#adb5bd;strokeWidth=1" vertex="1" parent="1">
+          <mxGeometry x="60.0" y="200.0" width="340.0" height="74.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="rh0-t" value="O1 全局 / 静态量&lt;br&gt;地址链接期就定死" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontFamily=Microsoft YaHei;fontColor=#1f2937" vertex="1" parent="1">
+          <mxGeometry x="173.2" y="219.5" width="113.7" height="35.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="c00" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#dee2e6;strokeWidth=1" vertex="1" parent="1">
+          <mxGeometry x="400.0" y="200.0" width="175.0" height="74.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="c01" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#d0bfff;strokeColor=#1e1e1e;strokeWidth=2" vertex="1" parent="1">
+          <mxGeometry x="575.0" y="200.0" width="175.0" height="74.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="c01-t" value="符号→区内偏移" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontFamily=Microsoft YaHei;fontColor=#1f2937" vertex="1" parent="1">
+          <mxGeometry x="616.9" y="228.2" width="91.3" height="17.5" as="geometry"/>
+        </mxCell>
+        <mxCell id="c02" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#c3fae8;strokeColor=#1e1e1e;strokeWidth=2" vertex="1" parent="1">
+          <mxGeometry x="750.0" y="200.0" width="175.0" height="74.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="c02-t" value="绝对地址" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontFamily=Microsoft YaHei;fontColor=#1f2937" vertex="1" parent="1">
+          <mxGeometry x="809.5" y="228.2" width="56.0" height="17.5" as="geometry"/>
+        </mxCell>
+        <mxCell id="c03" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#dee2e6;strokeWidth=1" vertex="1" parent="1">
+          <mxGeometry x="925.0" y="200.0" width="175.0" height="74.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="rh1" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#adb5bd;strokeWidth=1" vertex="1" parent="1">
+          <mxGeometry x="60.0" y="274.0" width="340.0" height="74.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="rh1-t" value="O2 函数内局部量 / 形参&lt;br&gt;DWARF 只给区间规则" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontFamily=Microsoft YaHei;fontColor=#1f2937" vertex="1" parent="1">
+          <mxGeometry x="152.2" y="293.5" width="155.7" height="35.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="c10" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#dee2e6;strokeWidth=1" vertex="1" parent="1">
+          <mxGeometry x="400.0" y="274.0" width="175.0" height="74.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="c11" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#dee2e6;strokeWidth=1" vertex="1" parent="1">
+          <mxGeometry x="575.0" y="274.0" width="175.0" height="74.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="c12" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#dee2e6;strokeWidth=1" vertex="1" parent="1">
+          <mxGeometry x="750.0" y="274.0" width="175.0" height="74.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="c13" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#ffc9c9;strokeColor=#c0392b;strokeWidth=3" vertex="1" parent="1">
+          <mxGeometry x="925.0" y="274.0" width="175.0" height="74.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="c13-t" value="先停在区间内" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontFamily=Microsoft YaHei;fontColor=#1f2937" vertex="1" parent="1">
+          <mxGeometry x="970.5" y="302.2" width="84.0" height="17.5" as="geometry"/>
+        </mxCell>
+        <mxCell id="rh2" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#adb5bd;strokeWidth=1" vertex="1" parent="1">
+          <mxGeometry x="60.0" y="348.0" width="340.0" height="74.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="rh2-t" value="O3 指令路径&lt;br&gt;某条语句走没走到" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontFamily=Microsoft YaHei;fontColor=#1f2937" vertex="1" parent="1">
+          <mxGeometry x="174.0" y="367.5" width="112.0" height="35.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="c20" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#dee2e6;strokeWidth=1" vertex="1" parent="1">
+          <mxGeometry x="400.0" y="348.0" width="175.0" height="74.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="c21" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#dee2e6;strokeWidth=1" vertex="1" parent="1">
+          <mxGeometry x="575.0" y="348.0" width="175.0" height="74.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="c22" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#dee2e6;strokeWidth=1" vertex="1" parent="1">
+          <mxGeometry x="750.0" y="348.0" width="175.0" height="74.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="c23" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#ffc9c9;strokeColor=#c0392b;strokeWidth=3" vertex="1" parent="1">
+          <mxGeometry x="925.0" y="348.0" width="175.0" height="74.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="c23-t" value="执行到 :行" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontFamily=Microsoft YaHei;fontColor=#1f2937" vertex="1" parent="1">
+          <mxGeometry x="977.2" y="376.2" width="70.6" height="17.5" as="geometry"/>
+        </mxCell>
+        <mxCell id="rh3" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#adb5bd;strokeWidth=1" vertex="1" parent="1">
+          <mxGeometry x="60.0" y="422.0" width="340.0" height="74.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="rh3-t" value="O4 内存块&lt;br&gt;不限符号的裸字节" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontFamily=Microsoft YaHei;fontColor=#1f2937" vertex="1" parent="1">
+          <mxGeometry x="174.0" y="441.5" width="112.0" height="35.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="c30" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#dee2e6;strokeWidth=1" vertex="1" parent="1">
+          <mxGeometry x="400.0" y="422.0" width="175.0" height="74.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="c31" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#d0bfff;strokeColor=#1e1e1e;strokeWidth=2" vertex="1" parent="1">
+          <mxGeometry x="575.0" y="422.0" width="175.0" height="74.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="c31-t" value="≤128B 一块" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontFamily=Microsoft YaHei;fontColor=#1f2937" vertex="1" parent="1">
+          <mxGeometry x="626.7" y="450.2" width="71.7" height="17.5" as="geometry"/>
+        </mxCell>
+        <mxCell id="c32" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#c3fae8;strokeColor=#1e1e1e;strokeWidth=2" vertex="1" parent="1">
+          <mxGeometry x="750.0" y="422.0" width="175.0" height="74.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="c32-t" value="不限长度" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontFamily=Microsoft YaHei;fontColor=#1f2937" vertex="1" parent="1">
+          <mxGeometry x="809.5" y="450.2" width="56.0" height="17.5" as="geometry"/>
+        </mxCell>
+        <mxCell id="c33" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#dee2e6;strokeWidth=1" vertex="1" parent="1">
+          <mxGeometry x="925.0" y="422.0" width="175.0" height="74.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="rh4" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#adb5bd;strokeWidth=1" vertex="1" parent="1">
+          <mxGeometry x="60.0" y="496.0" width="340.0" height="74.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="rh4-t" value="O5 对外行为&lt;br&gt;读回值 / 记录 / 错误码" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontFamily=Microsoft YaHei;fontColor=#1f2937" vertex="1" parent="1">
+          <mxGeometry x="152.2" y="515.5" width="155.7" height="35.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="c40" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#a5d8ff;strokeColor=#1e1e1e;strokeWidth=2" vertex="1" parent="1">
+          <mxGeometry x="400.0" y="496.0" width="175.0" height="74.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="c40-t" value="触发只能它发" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontFamily=Microsoft YaHei;fontColor=#1f2937" vertex="1" parent="1">
+          <mxGeometry x="445.5" y="524.2" width="84.0" height="17.5" as="geometry"/>
+        </mxCell>
+        <mxCell id="c41" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#dee2e6;strokeWidth=1" vertex="1" parent="1">
+          <mxGeometry x="575.0" y="496.0" width="175.0" height="74.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="c42" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#dee2e6;strokeWidth=1" vertex="1" parent="1">
+          <mxGeometry x="750.0" y="496.0" width="175.0" height="74.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="c43" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#dee2e6;strokeWidth=1" vertex="1" parent="1">
+          <mxGeometry x="925.0" y="496.0" width="175.0" height="74.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="rh5" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#adb5bd;strokeWidth=1" vertex="1" parent="1">
+          <mxGeometry x="60.0" y="570.0" width="340.0" height="74.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="rh5-t" value="O6 寄存器组&lt;br&gt;PC / SP / r0-7；SWD 另有外设寄存器" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontFamily=Microsoft YaHei;fontColor=#1f2937" vertex="1" parent="1">
+          <mxGeometry x="108.5" y="589.5" width="243.0" height="35.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="c50" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#dee2e6;strokeWidth=1" vertex="1" parent="1">
+          <mxGeometry x="400.0" y="570.0" width="175.0" height="74.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="c51" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#dee2e6;strokeWidth=1" vertex="1" parent="1">
+          <mxGeometry x="575.0" y="570.0" width="175.0" height="74.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="c52" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#c3fae8;strokeColor=#1e1e1e;strokeWidth=2" vertex="1" parent="1">
+          <mxGeometry x="750.0" y="570.0" width="175.0" height="74.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="c52-t" value="PC / SP / r0-7" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontFamily=Microsoft YaHei;fontColor=#1f2937" vertex="1" parent="1">
+          <mxGeometry x="786.5" y="598.2" width="101.9" height="17.5" as="geometry"/>
+        </mxCell>
+        <mxCell id="c53" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#ffc9c9;strokeColor=#c0392b;strokeWidth=3" vertex="1" parent="1">
+          <mxGeometry x="925.0" y="570.0" width="175.0" height="74.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="c53-t" value="断了才有值" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontFamily=Microsoft YaHei;fontColor=#1f2937" vertex="1" parent="1">
+          <mxGeometry x="977.5" y="598.2" width="70.0" height="17.5" as="geometry"/>
+        </mxCell>
+        <mxCell id="n1" value="空着的地方就是「这条通路读不到它」—— 不是「不需要看」：" style="text;html=1;align=center;verticalAlign=middle;fontSize=15;fontFamily=Microsoft YaHei;fontColor=#1f2937" vertex="1" parent="1">
+          <mxGeometry x="373.3" y="680.6" width="413.4" height="18.8" as="geometry"/>
+        </mxCell>
+        <mxCell id="n2" value="O5 只有 A 通得（「这一帧被拒了」不落在任何变量上）；O2 / O3 只有 D 通得（你发不出那个触发，不等于那条路不存在）。" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontFamily=Microsoft YaHei;fontColor=#1f2937" vertex="1" parent="1">
+          <mxGeometry x="182.1" y="711.2" width="795.8" height="17.5" as="geometry"/>
+        </mxCell>
+        <mxCell id="n3" value="红框 D 是唯一要停核的通路 ⇒ 「能不停核解决的判据一律走 A/B/C」是纪律，不是偏好。" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontFamily=Microsoft YaHei;fontColor=#c0392b" vertex="1" parent="1">
+          <mxGeometry x="298.3" y="741.2" width="563.4" height="17.5" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

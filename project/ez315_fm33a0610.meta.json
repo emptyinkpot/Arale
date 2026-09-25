@@ -1,0 +1,37 @@
+{
+  "_comment": "EZ315/FM33A0610 单相表【环境清单】= 机器可用的条件数据, 不是给人读的知识。字段全是值/列举, 无散文。env_check 据此断言'该表环境是否完好'。换固件版本后若地址/帧不再对得上, 改这里(见 env_check 输出)。firmware 块同时是**探测声明**(_probe_all.py --from-project 据此拿齐输入): src_root/ewp 说'这版固件由哪份源码编出来', out_sha256 说'必须是那一份'。",
+  "firmware": {
+    "name": "EZ315-FM33A0610EV-APP",
+    "toolchain": "IAR for ARM",
+    "build_ref": "2026-09-08 build (IAR)",
+    "out_sha256": "6a58ee14a4a21c1c0cb33b30668a4a27c2c29efd5b289d6d4e623107477eab0f",
+    "src_root": "E:\\My Work\\MengXi\\EZ315-FM33A0610EV-APP",
+    "ewp": "E:\\My Work\\MengXi\\EZ315-FM33A0610EV-APP\\Project\\EZ315-FM33A0610EV-APP.ewp",
+    "addresses_validated_vs_out": true,
+    "validated_date": "2026-09-09"
+  },
+  "dualchip": {
+    "manage_af": 5,
+    "meter_af": 15,
+    "meter_reachable": ["40000200"],
+    "meter_rejected": [],
+    "conditions": [
+      "管理芯 AF=0x05 本地应答; 计量芯 AF=0x15 经管理芯 UARTM 透传代答桥回(机制在 meterlib, 此处只记可达性数据)",
+      "本表实测可达计量芯对象: 40000200 校时 Set(DAR=0, 2026-09-09 真表验证)",
+      "计量芯寄存器无外部直达: 645 DI3 E0/E1 两侧死代码; AA80 只读管理芯本区(RAM/APB/外存/ESAM), 读不到计量芯"
+    ]
+  },
+  "serial": {
+    "port": "COM3",
+    "baud": 9600,
+    "parity": "E",
+    "stopbits": 1,
+    "note": "CP210x 桥, DL/T645 + DL/T698.45 同口"
+  },
+  "table": {
+    "addr_645": "111111111111",
+    "af_manage": 5,
+    "af_meter": 15,
+    "ca": 161
+  }
+}

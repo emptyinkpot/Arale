@@ -1,0 +1,28 @@
+# Python 字节码缓存(import 时自动重建, 勿入库)
+__pycache__/
+*.pyc
+
+# 虚拟环境(pyproject.toml 定了装法: python -m venv .venv; 每台机器自己建一份, 不入库)
+.venv/
+
+# 可编辑安装生成的元数据目录(pip install -e . 每次会重建)
+*.egg-info/
+
+# 一次性串口测试报告转储(TestResult*.rtf 属临时产物, 需要可 git add -f 强加)
+TestResult*.rtf
+
+# 运行日志(log/: runlog tee 产物, 一次性测试工件, 不入库)
+log/
+
+# 临时试验目录(用后即删)
+_gittest*/
+
+# gdb/DWARF 排查的临时转储(如 `info scope` 输出; 结论进文档, 转储本身不留)
+_dbg/
+
+# Obsidian 库配置(把本目录当库打开时会自动生成; 是编辑器的本地状态, 不入库)
+.obsidian/
+
+# 测试脚本(不计入"源码"口径, 但已提交入库, 仍受版本控制)
+# 位置: project/tests/*.py(测试套件)、templates/test_script_template.py(模板)
+# 注: 仅作归类标注, 未加忽略规则, 这些文件照常提交入库

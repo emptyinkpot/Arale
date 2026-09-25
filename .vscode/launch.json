@@ -1,0 +1,91 @@
+{
+  // ============================================================================
+  //  EZ315 / FM33A0610 管理芯 · 白盒调试配置
+  //  后端: J-Link PLUS (SN 609788888) + JLinkGDBServerCL  (非 OpenOCD)
+  //  器件: Cortex-M0  (armv6s-m, 泛型即可 —— IAR 的 .jlink 配置也写 Cortex-M0)
+  //  符号: 管理芯 .out (与 project/ez315_fm33a0610.py 的 RAM_VARS 已逐项核对一致)
+  //  工具链: E:\programfile\gcc-arm-none-eabi  (7-Zip 直解，免安装/UAC)
+  //  gdb   : E:\programfile\gdb-multiarch  (MSYS2 gdb-multiarch 17.2, --with-python; 2026-09-11 换)
+  //          ARM 官方那份是 --with-python=no, 装不了喂狗钩子 ⇒ 属降级, 已废
+  // ============================================================================
+  "version": "0.2.0",
+  "configurations": [
+    {
+      //------------------------------------------------------------------
+      // 【主力】附加到正在运行的表：不下复位、不烧写，纯观测
+      // 白盒 Watch / 读内存 / 打断点都用这个。表会继续跑。
+      //------------------------------------------------------------------
+      "name": "① 附加·不断电 (白盒观测主力)",
+      "type": "cortex-debug",
+      "request": "attach",
+      "servertype": "jlink",
+      "cwd": "${workspaceFolder}",
+      "executable": "E:/My Work/MengXi/EZ315-FM33A0610EV-APP/Build/EZ315-FM33A0610EV-APP/EZ315-FM33A0610EV-APP.out",
+      "device": "Cortex-M0",
+      "interface": "swd",
+      "serialNumber": "609788888",
+      "serverpath": "C:/Program Files/SEGGER/JLink_V818/JLinkGDBServerCL.exe",
+      "armToolchainPath": "E:/programfile/gcc-arm-none-eabi/bin",
+      // gdb 单点: 必须用**带 Python scripting 的 multiarch** 那份(ARM 官方那份 --with-python=no)。
+      // 取 gdb-multiarch.exe, 不是同目录的 gdb.exe(那个只有 x86 宿主目标, 载 ARM .out 后架构是 i386)。
+      "gdbPath": "E:/programfile/gdb-multiarch/mingw64/bin/gdb-multiarch.exe",
+      "showDevDebugOutput": "none"
+    },
+
+    {
+      //------------------------------------------------------------------
+      // 【备选】复位并重新加载固件再调试
+      // ⚠️ 会让表复位重启：当前电量/表钟/事件库的 RAM 态清零
+      //    只在"要 obs 启动初始化路径"时用，日常白盒别选这个。
+      //------------------------------------------------------------------
+      "name": "② 复位·重新加载 (会打断表运行)",
+      "type": "cortex-debug",
+      "request": "launch",
+      "servertype": "jlink",
+      "cwd": "${workspaceFolder}",
+      "executable": "E:/My Work/MengXi/EZ315-FM33A0610EV-APP/Build/EZ315-FM33A0610EV-APP/EZ315-FM33A0610EV-APP.out",
+      "device": "Cortex-M0",
+      "interface": "swd",
+      "serialNumber": "609788888",
+      "serverpath": "C:/Program Files/SEGGER/JLink_V818/JLinkGDBServerCL.exe",
+      "armToolchainPath": "E:/programfile/gcc-arm-none-eabi/bin",
+      // gdb 单点: 必须用**带 Python scripting 的 multiarch** 那份(ARM 官方那份 --with-python=no)。
+      // 取 gdb-multiarch.exe, 不是同目录的 gdb.exe(那个只有 x86 宿主目标, 载 ARM .out 后架构是 i386)。
+      "gdbPath": "E:/programfile/gdb-multiarch/mingw64/bin/gdb-multiarch.exe",
+      "runToEntryPoint": "main",
+      "showDevDebugOutput": "none"
+    },
+
+    {
+      //------------------------------------------------------------------
+      // 【只读快照】连上→立刻 dump 画像里的白盒 Watch 变量→断开
+      // 等价于现在串口 AA80 的 watch_vars，但走 JTAG 直读、不占串口、
+      // 不影响表通讯。产物落在 ./_dbg/。
+      //------------------------------------------------------------------
+      "name": "③ 只读快照·Watch 变量 (等价 AA80 watch_vars)",
+      "type": "cortex-debug",
+      "request": "attach",
+      "servertype": "jlink",
+      "cwd": "${workspaceFolder}",
+      "executable": "E:/My Work/MengXi/EZ315-FM33A0610EV-APP/Build/EZ315-FM33A0610EV-APP/EZ315-FM33A0610EV-APP.out",
+      "device": "Cortex-M0",
+      "interface": "swd",
+      "serialNumber": "609788888",
+      "serverpath": "C:/Program Files/SEGGER/JLink_V818/JLinkGDBServerCL.exe",
+      "armToolchainPath": "E:/programfile/gcc-arm-none-eabi/bin",
+      // gdb 单点: 必须用**带 Python scripting 的 multiarch** 那份(ARM 官方那份 --with-python=no)。
+      // 取 gdb-multiarch.exe, 不是同目录的 gdb.exe(那个只有 x86 宿主目标, 载 ARM .out 后架构是 i386)。
+      "gdbPath": "E:/programfile/gdb-multiarch/mingw64/bin/gdb-multiarch.exe",
+      "showDevDebugOutput": "none",
+      "postAttachCommands": [
+        "echo \\n===== 白盒 Watch (管理芯 RAM) =====\\n",
+        "p g_HisTime", "p g_CurTime",
+        "p g_FrezAdr", "p g_FrezNum", "p g_FrezLen",
+        "echo \\n===== 稳定态 (绝不该被写坏的) =====\\n",
+        "p g_RateNo", "p g_ZoneSwNo", "p g_SlotSwNo",
+        "p g_RelayCmd", "p g_RelaySta", "p g_RelayFlg",
+        "p g_CtrlStat", "p g_DispPara"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,151 @@
+<mxfile host="app.diagrams.net" type="device">
+  <diagram id="d1" name="Page-1">
+    <mxGraphModel dx="1520" dy="868" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1520" pageHeight="868" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="t1" value="体系全貌 —— 两条链路 · 四条通路 · 两个触发通道" style="text;html=1;align=center;verticalAlign=middle;fontSize=24;fontFamily=Microsoft YaHei;fontColor=#1e40af" vertex="1" parent="1">
+          <mxGeometry x="440.0" y="27.0" width="640.0" height="30.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-host" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#dbe4ff;strokeColor=#4c6ef5;strokeWidth=2;dashed=1;opacity=30" vertex="1" parent="1">
+          <mxGeometry x="40.0" y="110.0" width="330.0" height="420.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-host-l" value="本机（上位）" style="text;html=1;align=center;verticalAlign=middle;fontSize=18;fontFamily=Microsoft YaHei;fontColor=#1e40af" vertex="1" parent="1">
+          <mxGeometry x="151.0" y="128.8" width="108.0" height="22.5" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-way" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#e5dbff;strokeColor=#7048e8;strokeWidth=2;dashed=1;opacity=30" vertex="1" parent="1">
+          <mxGeometry x="400.0" y="110.0" width="660.0" height="420.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-way-l" value="两条调试通路（一条链路一条，互相独立、可互替）" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontFamily=Microsoft YaHei;fontColor=#5f3dc4" vertex="1" parent="1">
+          <mxGeometry x="520.0" y="128.8" width="420.0" height="20.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-dut" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#ffd8a8;strokeColor=#e8590c;strokeWidth=2;dashed=1;opacity=30" vertex="1" parent="1">
+          <mxGeometry x="1140.0" y="110.0" width="330.0" height="420.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-dut-l" value="被测对象 —— 真表跑真固件" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontFamily=Microsoft YaHei;fontColor=#d9480f" vertex="1" parent="1">
+          <mxGeometry x="1213.4" y="128.8" width="193.3" height="20.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="e" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#ffd8a8;strokeColor=#1e1e1e;strokeWidth=2" vertex="1" parent="1">
+          <mxGeometry x="60.0" y="180.0" width="290.0" height="95.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-t" value="脚本 —— 跑，不被 import&lt;br&gt;scripts/ · project/tests/_test_*.py&lt;br&gt;（一个子项一个脚本）" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontFamily=Microsoft YaHei;fontColor=#1f2937" vertex="1" parent="1">
+          <mxGeometry x="72.0" y="192.0" width="266.0" height="71.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="l" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#a5d8ff;strokeColor=#1e1e1e;strokeWidth=2" vertex="1" parent="1">
+          <mxGeometry x="60.0" y="350.0" width="290.0" height="95.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="l-t" value="库 —— 认协议 / 认硬件，不认表&lt;br&gt;meterlib（A/B 路）· swdbg（C/D 路）&lt;br&gt;common（中立层）" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontFamily=Microsoft YaHei;fontColor=#1f2937" vertex="1" parent="1">
+          <mxGeometry x="72.0" y="362.0" width="266.0" height="71.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="a-el" style="edgeStyle=none;html=1;rounded=0;jumpStyle=none;endArrow=classic;startArrow=none;endFill=1;startFill=1;strokeColor=#1e1e1e;strokeWidth=2" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+          <mxPoint x="205.0" y="275.0" as="sourcePoint"/>
+          <mxPoint x="205.0" y="350.0" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ser" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#a5d8ff;strokeColor=#1e1e1e;strokeWidth=2" vertex="1" parent="1">
+          <mxGeometry x="420.0" y="180.0" width="620.0" height="140.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="ser-h" value="串口调试 —— 645/698 帧与 AA80 读内存" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontFamily=Microsoft YaHei;fontColor=#1e40af" vertex="1" parent="1">
+          <mxGeometry x="440.0" y="194.0" width="580.0" height="24.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="ser-k" value="链路：USB-485 桥 CP210x · RS485 · 9600 8E1" style="text;html=1;align=center;verticalAlign=middle;fontSize=13;fontFamily=Microsoft YaHei;fontColor=#868e96" vertex="1" parent="1">
+          <mxGeometry x="440.0" y="220.0" width="580.0" height="20.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="ser-a" value="A 645/698 帧 —— 看对外行为（不停核）" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontFamily=Microsoft YaHei;fontColor=#1f2937" vertex="1" parent="1">
+          <mxGeometry x="440.0" y="250.0" width="580.0" height="22.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="ser-b" value="B AA80 读内存 —— 看全局内存，区内偏移 ≤128B（不停核）" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontFamily=Microsoft YaHei;fontColor=#1f2937" vertex="1" parent="1">
+          <mxGeometry x="440.0" y="280.0" width="580.0" height="22.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="dbg" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#d0bfff;strokeColor=#1e1e1e;strokeWidth=2" vertex="1" parent="1">
+          <mxGeometry x="420.0" y="350.0" width="620.0" height="150.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="dbg-h" value="SWD 调试 —— SWD 直读与 gdb 断点" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontFamily=Microsoft YaHei;fontColor=#5f3dc4" vertex="1" parent="1">
+          <mxGeometry x="440.0" y="364.0" width="580.0" height="24.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="dbg-k" value="链路：J-Link PLUS · SWD 2 线 · 1 MHz" style="text;html=1;align=center;verticalAlign=middle;fontSize=13;fontFamily=Microsoft YaHei;fontColor=#868e96" vertex="1" parent="1">
+          <mxGeometry x="440.0" y="390.0" width="580.0" height="20.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="dbg-c" value="C SWD 直读 —— 看全局 / 静态，绝对地址（不停核）" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontFamily=Microsoft YaHei;fontColor=#1f2937" vertex="1" parent="1">
+          <mxGeometry x="440.0" y="418.0" width="580.0" height="22.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="d" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#c0392b;strokeWidth=3" vertex="1" parent="1">
+          <mxGeometry x="440.0" y="446.0" width="580.0" height="42.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="dbg-d" value="D gdb 断点 —— 看局部量 + 指令路径（停核）" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontFamily=Microsoft YaHei;fontColor=#1f2937" vertex="1" parent="1">
+          <mxGeometry x="452.0" y="453.0" width="556.0" height="28.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="a-ls" style="edgeStyle=none;html=1;rounded=0;jumpStyle=none;endArrow=classic;startArrow=none;endFill=1;startFill=1;strokeColor=#1e1e1e;strokeWidth=2" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+          <mxPoint x="350.0" y="400.0" as="sourcePoint"/>
+          <mxPoint x="420.0" y="250.0" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a-ld" style="edgeStyle=none;html=1;rounded=0;jumpStyle=none;endArrow=classic;startArrow=none;endFill=1;startFill=1;strokeColor=#1e1e1e;strokeWidth=2" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+          <mxPoint x="350.0" y="420.0" as="sourcePoint"/>
+          <mxPoint x="420.0" y="425.0" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#ffc9c9;strokeColor=#1e1e1e;strokeWidth=2" vertex="1" parent="1">
+          <mxGeometry x="1175.0" y="220.0" width="260.0" height="90.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="m-t" value="管理芯 FM33A0610&lt;br&gt;SecurCore SC000" style="text;html=1;align=center;verticalAlign=middle;fontSize=15;fontFamily=Microsoft YaHei;fontColor=#1f2937" vertex="1" parent="1">
+          <mxGeometry x="1243.5" y="246.2" width="123.0" height="37.5" as="geometry"/>
+        </mxCell>
+        <mxCell id="x" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#ffc9c9;strokeColor=#1e1e1e;strokeWidth=2" vertex="1" parent="1">
+          <mxGeometry x="1175.0" y="380.0" width="260.0" height="80.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="x-t" value="计量芯 HT7032" style="text;html=1;align=center;verticalAlign=middle;fontSize=15;fontFamily=Microsoft YaHei;fontColor=#1f2937" vertex="1" parent="1">
+          <mxGeometry x="1255.2" y="410.6" width="99.6" height="18.8" as="geometry"/>
+        </mxCell>
+        <mxCell id="a-ser-m" style="edgeStyle=none;html=1;rounded=0;jumpStyle=none;endArrow=classic;startArrow=none;endFill=1;startFill=1;strokeColor=#1e1e1e;strokeWidth=2" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+          <mxPoint x="1040.0" y="250.0" as="sourcePoint"/>
+          <mxPoint x="1175.0" y="265.0" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a-dbg-m" style="edgeStyle=none;html=1;rounded=0;jumpStyle=none;endArrow=classic;startArrow=none;endFill=1;startFill=1;strokeColor=#1e1e1e;strokeWidth=2" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+          <mxPoint x="1040.0" y="425.0" as="sourcePoint"/>
+          <mxPoint x="1175.0" y="265.0" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a-m-x" style="edgeStyle=none;html=1;rounded=0;jumpStyle=none;endArrow=classic;startArrow=none;endFill=1;startFill=1;strokeColor=#d9480f;strokeWidth=2" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+          <mxPoint x="1305.0" y="310.0" as="sourcePoint"/>
+          <mxPoint x="1305.0" y="380.0" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a-m-x-t" value="SPI3" style="text;html=1;align=center;verticalAlign=middle;fontSize=13;fontFamily=Microsoft YaHei;fontColor=#d9480f" vertex="1" parent="1">
+          <mxGeometry x="1315.0" y="336.9" width="27.0" height="16.2" as="geometry"/>
+        </mxCell>
+        <mxCell id="trig" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#fff3bf;strokeColor=#1e1e1e;strokeWidth=2" vertex="1" parent="1">
+          <mxGeometry x="40.0" y="660.0" width="380.0" height="100.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="trig-t" value="两个触发通道&lt;br&gt;① 发帧 —— 默认，能用帧造的一律用帧&lt;br&gt;② 注入 —— 帧造不出的状态（越界值 / 恰好差 1s）" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontFamily=Microsoft YaHei;fontColor=#1f2937" vertex="1" parent="1">
+          <mxGeometry x="67.3" y="683.8" width="325.4" height="52.5" as="geometry"/>
+        </mxCell>
+        <mxCell id="a-trig-m" style="edgeStyle=none;html=1;rounded=0;jumpStyle=none;endArrow=classic;startArrow=none;endFill=1;startFill=1;strokeColor=#d9480f;strokeWidth=2;dashed=1" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+          <mxPoint x="420.0" y="710.0" as="sourcePoint"/>
+          <mxPoint x="1290.0" y="530.0" as="targetPoint"/>
+          <Array as="points">
+          <mxPoint x="1290.0" y="710.0"/>
+          </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a-trig-m-t" value="让表进入那一刻状态" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontFamily=Microsoft YaHei;fontColor=#d9480f" vertex="1" parent="1">
+          <mxGeometry x="637.0" y="675.2" width="126.0" height="17.5" as="geometry"/>
+        </mxCell>
+        <mxCell id="card-note" value="卡带（project/ 表卡带 · machine/ 装机卡带）是纯数据，由组合根装配进库 —— 换表换机器只换它，引擎一字不改" style="text;html=1;align=left;verticalAlign=middle;fontSize=13;fontFamily=Microsoft YaHei;fontColor=#868e96" vertex="1" parent="1">
+          <mxGeometry x="40.0" y="570.0" width="660.0" height="18.8" as="geometry"/>
+        </mxCell>
+        <mxCell id="cap" value="红框（D）是唯一要停核的通路 —— 「能不停核解决的判据一律走 A/B/C」是纪律，不是偏好" style="text;html=1;align=center;verticalAlign=middle;fontSize=15;fontFamily=Microsoft YaHei;fontColor=#c0392b" vertex="1" parent="1">
+          <mxGeometry x="454.6" y="796.6" width="610.8" height="18.8" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

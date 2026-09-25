@@ -1,0 +1,29 @@
+{
+  "_comment": "win11-c07751 装机卡带的**验收期望** —— env_check 据此判『这台机器能不能开工』。⚠ 本文件**不复述路径/SN/COM**: 机器条件的真源在 win11_c07751.py, 在这里再写一遍就是第二份事实源(哪天分岔了, 判定会在另一份上放行)。这里只声明『该拿它验什么』: 版本、能力开关、镜像文件清单。",
+  "machine": {
+    "name": "win11-c07751",
+    "profile": "machine.win11_c07751",
+    "os": "Windows 11 Pro 10.0.26200"
+  },
+  "expect": {
+    "gdb_substr": ["--enable-targets=all", "--with-python"],
+    "gdb_min_version": "17.2",
+    "arch_after_load": "armv6s-m",
+    "note": "gdb_substr 两条缺一不可: 少了 --with-python, breakpoint 的 gdb 侧喂狗钩子装不上, 只能退到 python 侧补喂 —— 按 common/judge.py 口径属**降级**, 会把整项『通过』压成『未定论』。少了 --enable-targets=all 则载不了 ARM 的 .out。"
+  },
+  "debugger_mirror": {
+    "path": ".vscode/launch.json",
+    "path_note": "相对**仓根**(本包所在的那一级)。2026-09-14 仓重构前 launch.json 住上层, 现仓根就是本包所在的目录。",
+    "why": "launch.json 与装机卡带是**同一批事实**的两份落笔(gdb 路径 / SN / 器件 / 工具链)。它没法 import Python, 只能靠这道判定钉住 —— 所以这里不追求『删掉重复』, 而是把**静默的重复**变成**被核对的重复**。值按 os.path.normcase(normpath()) 归一后比较(大小写/斜杠方向都不算差异)。",
+    "fields": [
+      {"key": "serverpath", "spec": "GDB_SERVER"},
+      {"key": "gdbPath", "spec": "GDB"},
+      {"key": "serialNumber", "spec": "JLINK_SN"},
+      {"key": "device", "spec": "DEVICE"},
+      {"key": "interface", "spec": "IFACE"},
+      {"key": "armToolchainPath", "spec": "ARM_TOOLCHAIN"}
+    ],
+    "unchecked": ["executable"],
+    "unchecked_why": "executable 是**表**的事实(.out 路径), 归 project/env_check.py 核 —— 每个包只核自己那根轴。"
+  }
+}

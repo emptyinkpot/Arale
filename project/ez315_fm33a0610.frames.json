@@ -1,0 +1,44 @@
+{
+  "comment": "OOPT/实测抓取的纯静态已验证帧叠加层。新增已验证帧在此贴 hex 登记即可, 不改 cmd_bank.py。id 与内置 SPECS 冲突时本层覆盖。schema: {\"frames\":[{\"id\":\"user.xxx\",\"name\":\"读xxx\",\"kind\":\"645|action|read|raw\",\"hex\":\"68 ... 16\",\"tags\":[],\"alias\":[],\"oad\":\"\",\"expect\":\"\",\"note\":\"\",\"check\":{\"expect\":\"get_resp\"},\"evidence\":\"\"}]}. 用 UTF-8(可带 BOM)。",
+  "frames": [
+    {
+      "id": "user.wr.billday.d1.v05",
+      "name": "写第1结算日=每月5号0点(0x14 04000B01)",
+      "kind": "645",
+      "hex": "FE FE FE FE 68 11 11 11 11 11 11 68 14 0E 34 3E 33 37 35 33 33 33 33 33 33 33 33 38 39 16",
+      "tags": ["4-6", "billday", "write", "param"],
+      "alias": ["写结算日=5号", "结算日写5号"],
+      "oad": "", "omd": "", "di": "04000B01",
+      "expect": "应答尾 94 00 CA 16 = 0x14 写成功(94=14|0x80, CA=CS)。写 04000B01 改第1结算日 → DLT645App.c:2246 → TaskFreeze.c:842 Chg_BillDayM(4-6 断[C])。",
+      "note": "数据域 -0x33 = 01 0B 00 04 | 02 | 00×7 | 00 05(值从 DAT8 起: 时0/日5)。DAT0=0x02 受控写 + 厂内 Is_EnablePrg() 才过 DLT645App.c:1538 判定(经验总结 §11)。",
+      "check": {"expect": "tail", "param": "9400CA16"},
+      "evidence": "改结算日触发一次结算冻结(Chg_BillDayM), IAR TaskFreeze.c:842 断点或回读结算冻结块核对电量/账期/时标"
+    },
+    {
+      "id": "user.wr.billday.d1.v06",
+      "name": "写第1结算日=每月6号0点(0x14 04000B01)",
+      "kind": "645",
+      "hex": "FE FE FE FE 68 11 11 11 11 11 11 68 14 0E 34 3E 33 37 35 33 33 33 33 33 33 33 33 39 3A 16",
+      "tags": ["4-6", "billday", "write", "param"],
+      "alias": ["写结算日=6号", "结算日写6号"],
+      "oad": "", "omd": "", "di": "04000B01",
+      "expect": "应答尾 94 00 CA 16 = 0x14 写成功(94=14|0x80, CA=CS)。写 04000B01 改第1结算日 → DLT645App.c:2246 → TaskFreeze.c:842 Chg_BillDayM(4-6 断[C])。",
+      "note": "观测B用: 把结算日 00 05→00 06。由 user.wr.billday.d1.v05 明文末字节 05→06 组帧(CS 重算, 组帧库核验逐字节一致, 非手算)。",
+      "check": {"expect": "tail", "param": "9400CA16"},
+      "evidence": "改结算日触发一次结算冻结(Chg_BillDayM), IAR TaskFreeze.c:842 断点或回读结算冻结块核对电量/账期/时标"
+    },
+    {
+      "id": "user.rd.billday.d1",
+      "name": "读第1结算日(0x11 04000B01)",
+      "kind": "645",
+      "hex": "FE FE FE FE 68 11 11 11 11 11 11 68 11 04 34 3E 33 37 27 16",
+      "tags": ["4-6", "billday", "read", "param"],
+      "alias": ["读结算日", "读第1结算日"],
+      "oad": "", "omd": "", "di": "04000B01",
+      "expect": "应答 91 … 34 3E 33 37 33 38 → -0x33 = DI 01 0B 00 04 + 值 00 05(每月5号0点)。当前已由 00 01 改成 00 05。",
+      "note": "值在 0x91 应答数据区 DI 后 2B(+0x33)。想恢复每月1号: 把写帧末值 00 05 改 00 01 并重算 CS 即可(见 user.wr.billday.d1.v05)。",
+      "check": {"expect": "has", "param": "343E3337"},
+      "evidence": "读回值区=写回值即 PASS(改日链路闭环)"
+    }
+  ]
+}
