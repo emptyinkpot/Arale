@@ -131,7 +131,7 @@ Judge, rec = judge.Judge, judge.rec
 # `.out` 的**程序映像**(PT_LOAD 段)与"逐字累加" —— 16-2『软件比对』要**我们自己**按固件口径
 # 把应用区的累加和重算一遍(2026-09-17)。实现住中立层: 那边只实现"给定字节按 32 位小端字相加"
 # 这个**纯函数**, **不知道**固件用的是这个口径 —— 口径是 16-2 段的知识, 附在那边注释里。
-from common import elfsym
+from swdbg import elf as elfsym
 
 # ============================ 模块级常量(SPECS 组帧引用, 勿删) ============================
 FACTORY_645 = bytes.fromhex("FE FE FE FE 68 AA AA AA AA AA AA 68 1F 03 42 88 32 EA 16")
@@ -1318,7 +1318,7 @@ def exit_factory(ser, wait=3.0):
     本帧 LEN=3 故它回 ER_FRAME 被忽略) → 落到 CMD_ExtendIns0x1F_FDW → `case 0x0f: FDW_FacMode(pFrame)`):
       DLT645App.c:3566 `FDW_FacMode`: `pFrame[LEN]==3 && pFrame[DI1]==0xaa` 那一支 → `Set_PrgTimer(0)`。
       **这一支没有任何判定**(进厂内那支 `DI1==0x55` 才要合盖/已在编程态) ⇒ 只要发得出就退得了。
-    实测(2026-09-10): 发前 g_PrgTimer[0]=255 → 发后 =0; 回读是 SWD 直读画像 `RAM_VARS["g_PrgTimer"]`。
+    实测(2026-09-10): 发前 g_PrgTimer[0]=255 → 发后 =0; 回读是 SWD 直读画像 `swdbg.resolve.resolve("g_PrgTimer")`。
 
     ⚠ 用它的时机: 它一发, 后续 698 动作/0x14 写全会被安全判定打回 ER_PSWD / DAR_MatchAuth ——
       凡"跑完测试收拾台面"要排在所有受控步骤**之后**(见 scripts/_restore_all.py 第 [5a] 步)。
@@ -2150,7 +2150,7 @@ def _bptxt(spec):
     return str(spec)
 
 
-# 3-2 的**预设判据条目** —— 测试**之前**就定死(源 = ledger.md 3-2 的 I 列「判过: ②③④⑤」), 供脚本
+# 3-2 的**预设判据条目** —— 测试**之前**就定死, 供脚本
 # `J = CB.Judge("3-2 …", CB.zone_slot_switch_criteria(), …)` 用。**为什么是函数不是全局常量**:
 # 它得跟下面的 roundtrip 摆在一起(判据与取证同处一读就懂), 但本层不该往外多一个全局名。
 #
@@ -2353,7 +2353,7 @@ def event_advanced(rec, pre=None, not_before=None):
 
 
 # ==================== 3-1『最多12费率』: 费率参数读写 + 三条取表路径(2026-09-10 建) ====================
-# 判据源 = project/knowledge/_whitebox_ledger/ledger.md 3-1「观察与判据」: ②各费率时段归属=所设费率号、无错位;
+# ②各费率时段归属=所设费率号、无错位;
 #   ③不同日期类型取表正确(节假日/周休日/普通日); ④nRateNum>12 被 :184 拦→兜底、12 上限生效。
 #
 # ---- 判据④的实测结论(2026-09-10 探针 log/probe_rate_num_*.log; 一处静态推断被推翻) ----
@@ -3401,7 +3401,7 @@ def rate_write_fallback_evidence(ser, inj=None, at=None, watch=None,
 
 
 def rate_para_criteria():
-    """3-1 的预设判据条目(源 = project/knowledge/_whitebox_ledger/ledger.md 3-1 的 I 列「判过: ②③④」)。
+    """3-1 的预设判据条目。
 
     拆分说明(**不是洁癖, 不拆就会记出假通过**):
       · ② 一条: "归属=所设费率号"与"无错位"是同一次读数的两个面(rate/solt 一起看), 合成一条;
@@ -3497,7 +3497,7 @@ def rate_para_roundtrip(ser, date, rate_n, trig=None, bp=None, wb_waived=False,
 # 与 bill_freeze_criteria/bill_freeze_evidence(4-6) 同一套: 预设条目 + 库内证据函数 → common/judge.py 汇总。
 # **判据本体放库里**(测试脚本是薄操作清单), 脚本只认领/打印/拿退出码。
 def clear_meter_criteria():
-    """5-4「电表清零」的预设判据条目(源 = project/knowledge/_whitebox_ledger/ledger.md 5-4 的 I 列「判过: …」)。
+    """5-4「电表清零」的预设判据条目。
 
     与 3-2/4-6 同一套用法(见 common/judge.py): 测试**前**定死, 测试后只数它满足了几条。
 
@@ -3723,7 +3723,7 @@ def clear_event(ser, wait=3.0):
 
 
 # ==================== 5-5『事件清零』判据与证据(2026-09-11 建) ====================
-# 判据源 = project/knowledge/_whitebox_ledger/ledger.md 5-5「观察与判据」:
+
 #   只清指定块或全清与帧标识一致; 永久记录保留且新增一条; 无权限被拒(返回拒绝且原事件未动)。
 #
 # ---- 源码口径(Application/DLT645App.c `CMD_ClearEvent`, 2026-09-11 逐行核过) ----
@@ -3775,7 +3775,7 @@ _CLR_EV_FALSIFY = {
 
 
 def clear_event_criteria():
-    """5-5 的**预设条目**(源 = ledger.md 5-5 的「观察与判据」I 列)。测试前定死, 证据照它认领。
+    """5-5 的**预设条目**。测试前定死, 证据照它认领。
 
     ⚠ ⑤ 声明 `unprovable`, 且理由比"本台缺通道"更硬 —— **固件结构性封死**(2026-09-11 逐行核过,
       订正了本文件先前那句错误的归因): :3321 的 `if (dis != 0xFFFFFFFF) return ER_D0D1;` 在 if/else
@@ -4059,7 +4059,7 @@ def clr_event_partial_probe(ser, wait=2.5, dis=None):
 
 
 # ==================== 5-8『时钟故障』: 注入造故障 + 645 广播校时清故障(2026-09-16 建) ====================
-# 判据源 = project/knowledge/_whitebox_ledger/ledger.md 5-8「观察与判据」:
+
 #   ① 超差/倒退/超前正确判故障并写库  ② 恢复/校时后事件清除  ③ 时标正确
 #
 # ---- 为什么触发只能走注入(结构性, 不是"本台缺通道") ----
@@ -4150,7 +4150,7 @@ _CE_FALSIFY = {
 
 
 def clock_error_criteria():
-    """5-8 的**预设条目**(源 = ledger.md 5-8 的「观察与判据」I 列)。测试前定死, 证据照它认领。
+    """5-8 的**预设条目**。测试前定死, 证据照它认领。
 
     ⚠ 四条都**可证**(①②③ 靠注入造故障, ⑦ 靠连造), 故没有 `unprovable` 条目。台面没接 J-Link 时
       ① 落 `ok=None`(造不出故障 ⇒ 没做成)→ 未定论 —— 那与"固件不判故障"是两件事, 不许混。
@@ -4400,7 +4400,7 @@ def calitime_bc645_evidence(ser, delta=CE_CALI_DELTA, pre=None, wait=3.0, quiet=
       `DLT698App.c:3013` OAD `303C0B64`, 列定义 `TAB_CaliTimeBC:2765` 与时钟故障事件前十列逐条相同)。
       2026-09-16 实读 第 1 到第 5 个单元 **全是空单元**(固件"该单元没有值"的形态 = 数据段只有 `01 00 00 00`;
       对照: 5-3 掉电事件 最新一条 有值、倒数第 2 条/3 就是这个形状)⇒ **本台广播校时一次都没走通过 `:720`**。
-      这是复核清除段被拒时的第一条线索, 记在 `ledger.md` 的 J 里。
+      这是复核清除段被拒时的第一条线索。
 
     `rd` = 读回回调二元组 `(读表钟, 读事件)`; 缺省即真函数(给只想验判定逻辑的调用方留的口子, 同注入段)。
     `trig`/`bp`/`bp_vars` = 白盒段: 给出时**发帧那一步经 `trig` 下断点**(`bp` = `(文件,行号)`),
@@ -4858,7 +4858,7 @@ def send_frame_id(ser, token, wait=3.0, quiet=False):
 
 
 def clock_sync_criteria():
-    """2-1 的预设判据条目(源 = `project/knowledge/_whitebox_ledger/ledger.md` 2-1 的 I 列「判过: ②③④」)。
+    """2-1 的预设判据条目。
 
     拆分说明(**不是洁癖, 不拆就会记出假通过**):
       · ② 拆 a/b: ②a「管理芯钟真被改了」= **对外行为**, 串口读双芯钟即得; ②b「跟随支真被执行」
@@ -5503,27 +5503,27 @@ def clock_stamp_evidence(ser, want_ts, since=None, pre=None, tag="跟随改钟�
 
 
 def bill_freeze_criteria():
-    """4-6「结算日冻结」的预设判据条目(源 = ledger.md 4-6 的 I 列「判过: …」)。
+    """4-6「结算日冻结」的预设判据条目。
 
     与 3-2 同一套用法(见 common/judge.py): 测试**前**定死, 测试后只数它满足了几条。
     """
     return {
-        "①边界": "结算日边界自然生成一条结算冻结(链A 自然跨 0 点)",
-        "②快照": "电量 = 结算时刻的快照(记录整列 47B 逐字节 == 当前电能量对象整列)",
-        "③账期": "账期对得上(冻结时标日 == 该结算日)",
-        "④改日": "改结算日也触发一次(链B 每次改动恰 +1 条)",
-        "⑤对象表": "TAB_FrezObj 第 4 行翻出的 OAD == 出厂表登记的那 16 项(电能集合 00000400 + "
+        "边界": "结算日边界自然生成一条结算冻结(自然跨结算点)",
+        "快照": "电量 = 结算时刻的快照(记录整列 47B 逐字节 == 当前电能量对象整列)",
+        "账期": "账期对得上(冻结时标日 == 该结算日)",
+        "改日": "改结算日也触发一次(每次改动恰 +1 条)",
+        "对象表": "TAB_FrezObj 第 4 行翻出的 OAD == 出厂表登记的那 16 项(电能集合 00000400 + "
                  "8 个分项电能量 + 4 个基波/谐波总电能 + 20310200 + 2E600200 + 2E610200)",
-        "⑥结算日范围": "转存边界落在每月 1 日至 28 日内的整点: 写 1 号、28 号被收下且回读命中; "
+        "结算日范围": "转存边界落在每月 1 日至 28 日内的整点: 写 1 号、28 号被收下且回读命中; "
                     "写 29 号被拒(回读仍是原值) —— 与规范『或在每月的 1 日至 28 日内的整点时刻』一致",
-        "⑦容量": "存储上 12 个结算日: 结算冻结的存储深度 == 12, 且一次补冻上限 == 12",
-        "⑧需量复零": {"text": "每月第 1 结算日转存的同时当月最大需量复零",
+        "容量": "存储上 12 个结算日: 结算冻结的存储深度 == 12, 且一次补冻上限 == 12",
+        "需量复零": {"text": "每月第 1 结算日转存的同时当月最大需量复零",
                   "unprovable": "本机固件没有可观测的需量载体: 冻结对象表 12 行里 0x10 开头的 OAD "
                                 "一个都没有(探针读 TAB_FrezObj/TAB_SelObj 逐行核过), 结算冻结记录里"
                                 "没有需量列, `Clear_DayFreCurDmd` 在 TaskMetering.h 有声明、全固件无"
                                 "定义无调用 ⇒ 本台量不到『复零的是哪一个量』, 这一条答不出 falsify; "
                                 "要证须先由固件补出需量载体(变量或记录列), 再按它观测"},
-        "⑨需量补NULL": {"text": "非第 1 结算日的那几条记录里需量读回补 NULL",
+        "需量补NULL": {"text": "非第 1 结算日的那几条记录里需量读回补 NULL",
                     "unprovable": "同上: 结算冻结记录里根本没有需量列, 698 按需量 OAD 读不出这一列, "
                                   "所以『不转存』与『补 NULL』在本台都无从观测 —— 固件 `TaskFreeze.c` "
                                   "里那段 `Set_Data(…, 0xFF, …)` 也因需量对象不在对象表里而恒不命中; "
@@ -5532,16 +5532,16 @@ def bill_freeze_criteria():
 
 
 BILLFREZ_FALSIFY = {
-    "①边界": "跨 0 点没生成冻结 / 生成两条 ⇒ 序号不恰 +1; 或时标不是结算日 0 点 ⇒ 账期对不上",
-    "②快照": "记录里没写电量整列/写错对象(lead 位不是 组合14+正向15)/与当前电能量对不上",
-    "③账期": "跨 0 点没生成冻结 / 生成两条 ⇒ 序号不恰 +1; 或时标不是结算日 0 点 ⇒ 账期对不上",
-    "④改日": "改结算日不触发(或一次改动落两条) ⇒ 序号不恰 +1",
-    "⑤对象表": "出厂冻结对象表的第 4 行不是出厂登记的那批电量/金额对象, 或对象号查错了表 ⇒ 逐项比当场不符",
-    "⑥结算日范围": "结算日的范围判定不是 1..28(29 号也被收下), 或不看范围就写 ⇒ 29 号写后回读变了; "
+    "边界": "跨 0 点没生成冻结 / 生成两条 ⇒ 序号不恰 +1; 或时标不是结算日 0 点 ⇒ 账期对不上",
+    "快照": "记录里没写电量整列/写错对象(lead 位不是 组合14+正向15)/与当前电能量对不上",
+    "账期": "跨 0 点没生成冻结 / 生成两条 ⇒ 序号不恰 +1; 或时标不是结算日 0 点 ⇒ 账期对不上",
+    "改日": "改结算日不触发(或一次改动落两条) ⇒ 序号不恰 +1",
+    "对象表": "出厂冻结对象表的第 4 行不是出厂登记的那批电量/金额对象, 或对象号查错了表 ⇒ 逐项比当场不符",
+    "结算日范围": "结算日的范围判定不是 1..28(29 号也被收下), 或不看范围就写 ⇒ 29 号写后回读变了; "
                 "范围判定反了 ⇒ 1 号/28 号反而被拒",
-    "⑦容量": "出厂存储信息的深度不是 12、或补冻上限不是 12 ⇒ 与规范『至少能存储上 12 个结算日』对不上",
-    "⑧需量复零": "本机没有可观测的需量载体 ⇒ 这一条不作为固件证据(见 criteria 里那条的 unprovable)",
-    "⑨需量补NULL": "本机没有可观测的需量列 ⇒ 这一条不作为固件证据(见 criteria 里那条的 unprovable)",
+    "容量": "出厂存储信息的深度不是 12、或补冻上限不是 12 ⇒ 与规范『至少能存储上 12 个结算日』对不上",
+    "需量复零": "本机没有可观测的需量载体 ⇒ 这一条不作为固件证据(见 criteria 里那条的 unprovable)",
+    "需量补NULL": "本机没有可观测的需量列 ⇒ 这一条不作为固件证据(见 criteria 里那条的 unprovable)",
 }
 
 
@@ -5796,7 +5796,7 @@ def lp_inject_allow():
 
 
 def lostpower_criteria():
-    """5-3 的**预设条目**(源 = ledger.md 5-3 的「观察与判据」I 列)。测试前定死, 证据照它认领。
+    """5-3 的**预设条目**。测试前定死, 证据照它认领。
 
     拆分说明(每条都答得出 falsify, 见 `lostpower_roundtrip` 内各 add 的 falsify):
       · ① / ② 拆开 —— 「发生」与「恢复」是**两条独立的写库路径**(:3991 与 :4006)。合成一条的话,
@@ -6173,13 +6173,13 @@ def lostpower_roundtrip(ser, wb=None, wb_waived=False, wait=3.0, sample_gap=5.0,
     details = ["%s: %s" % (r["name"], r["detail"]) for r in recs]
     if not have_wb:
         details.append("未做: 断点观测(白盒) —— %s; 要证『记录开始/结束两条写库路径与置上报标志』"
-                       "需接 J-Link 重跑(断点见 ledger.md 5-3 的 F 列)"
+                       "需接 J-Link 重跑"
                        % ("用户本次指定只做黑盒" if wb_waived else "本次无调试会话"))
     return recs, details, scope
 
 
 # ==================== 5-2『事件记录·过载』判据与证据(2026-09-17 建) ====================
-# 判据源 = project/knowledge/_whitebox_ledger/ledger.md 5-2「观察与判据」:
+
 #   发生/恢复两笔 + 去抖秒数 + 时标 + 电量快照正确。
 #
 # ---- 判据链(源码 Application\TaskMetering.c; 行号逐条核过 `info line`, 命中地址一并记下) ----
@@ -6374,9 +6374,9 @@ def rvp_neg_claims():
 
 
 def overload_criteria():
-    """5-2 / 9-3 的**预设条目**(源 = ledger.md 5-2 的「观察与判据」I 列 + 操作步骤 H 列)。测试前定死。
+    """5-2 / 9-3 的**预设条目**。测试前定死。
 
-    **9-3(附录E 复验)与本项同条目** —— ledger.md 9-3 的判据栏原文就是「判据同 5-2」, 且规格 G 列
+    **9-3(附录E 复验)与本项同条目** —— 9-3 的判据栏原文就是「判据同 5-2」, 且规格 G 列
     明写「与 5-2 过载同一个断点」。故 `_test_9_3_overload.py` 直接调本函数、**不另抄一份**:
     抄一份的话, 两处条目一旦分叉, 两个脚本**单看都绿**而"附录 E 复验的是不是同一批条目"没人回答得了。
     ⚠ 首行那两个编号是**认领声明**: 5-2 与 9-3 都对账到本函数 ⇒ 两个都得写在首行里,
@@ -6434,7 +6434,7 @@ def overload_criteria():
 
 
 def revpower_criteria():
-    """9-2『事件记录·功率反向』的**预设条目**(源 = ledger.md 9-2 的「观察与判据」I 列)。
+    """9-2『事件记录·功率反向』的**预设条目**。
 
     与 5-2 的条目**同形不同内容**: 两条事件共用 `Chk_OverLoad` 与 `Recd_OverLoad`, 故 ①②③⑤⑥
     说的其实是同一段代码; 真正属于 9-2 的只有 **④** —— 它独有的那半部门。
@@ -7294,7 +7294,7 @@ def _meas_event_roundtrip(ser, spec, wb=None, wb_waived=False, wait=3.0, sample_
     details = ["%s: %s" % (r["name"], r["detail"]) for r in recs]
     if not have_wb:
         details.append("未做: 断点观测(白盒) —— %s; 要证『发生/结束两条写库路径 / 去抖秒数%s』"
-                       "需接 J-Link 重跑(断点见 ledger.md 该项的 F 列)"
+                       "需接 J-Link 重跑"
                        % ("用户本次指定只做黑盒" if wb_waived else "本次无调试会话",
                           " / 电量快照取自 g_EngyData" if spec.get("snapshot") else ""))
     if spec.get("snapshot"):
@@ -8071,7 +8071,7 @@ class EvtRun:
         details = ["%s: %s" % (r["name"], r["detail"]) for r in recs]
         if not self.have_wb:
             details.append("未做: 断点观测(白盒) —— %s; 要证『发生/结束两条写库路径 / 去抖秒数%s』"
-                           "需接 J-Link 重跑(断点见 ledger.md 该项的 F 列)"
+                           "需接 J-Link 重跑"
                            % ("用户本次指定只做黑盒" if self.wb_waived else "本次无调试会话",
                               " / 电量快照取自 g_EngyData" if spec.get("snapshot") else ""))
         if spec.get("snapshot"):
@@ -8133,7 +8133,7 @@ def revpower_roundtrip(ser, wb=None, wb_waived=False, wait=3.0, sample_gap=40.0,
 
 
 # ==================== 5-6『编程』: 成功写参 → Recd_Program 落库(2026-09-16 建) ====================
-# 判据源 = project/knowledge/_whitebox_ledger/ledger.md 5-6「观察与判据」:
+
 #   每次成功写参落一条; 操作者/项目/时标正确; 无权限写被拒且不记录。
 #
 # ---- 触发源(纯串口能造出、且表无净变的那一条) ----
@@ -8166,7 +8166,7 @@ PROG_EVENT_SUB = P.PROG_EVENT_SUB
 
 
 def program_criteria():
-    """5-6 的预设条目(源 = ledger.md 5-6「观察与判据」三句话, 拆成五条)。
+    """5-6 的预设条目。
 
     ⚠ ④ 只证**入参确实被传进去**(非空), **不证值对不对** —— "操作者/项目正确"里的"正确"要拿
       DL/T645 规范里这两个串的**期望编码**去比, 本脚本手上没有那份期望值。那半支在 J 列明写未证,
@@ -8368,7 +8368,7 @@ def program_roundtrip(ser, wb=None, wb_waived=False, bp_rec=None, vars_rec=(), w
     details = ["%s: %s" % (r["name"], r["detail"]) for r in recs]
     if not have_wb:
         details.append("未做: 断点观测(白盒) —— %s; 要证『写库位置走到 Recd_Program 且入参非空』"
-                       "需接 J-Link 重跑(断点见 ledger.md 5-6 的 F 列, 已订正为 TaskRecord.c:824)"
+                       "需接 J-Link 重跑"
                        % ("用户本次指定只做黑盒" if wb_waived else "本次无调试会话"))
     details.append("未证: 『操作者/项目**正确**』里的『正确』半支 —— 本脚本只证两个入参非空, "
                    "值对不对要拿 DL/T645 规范里操作者串与参数项列表的期望编码去比, 手上没有那份期望值")
@@ -8396,7 +8396,7 @@ def nn(txt):
 
 
 # ==================== 16-1『软件要求·参数设置权限 / 编程记录 / 软件标识』(2026-09-21 建) ====================
-# 判据源 = project/knowledge/_whitebox_ledger/ledger.md 16-1「观察与判据」三句话:
+
 #   无权限写被拒且不记录; 成功写落一条编程记录; 软件标识读取/比对。
 #
 # ---- 与 5-6 / 16-2 的关系(先说清, 免得把互证读成新覆盖) ----
@@ -8432,7 +8432,7 @@ PROG_ALT_BP = ("TaskRecord.c", 824)       # `Recd_Program` 体内首条可执行
 
 
 def prog_auth_criteria():
-    """16-1 的预设条目(源 = ledger.md 16-1「观察与判据」三句话, 拆成七条)。
+    """16-1 的预设条目。
 
     ⚠ ① 是本项**独有**的新覆盖; ②a/②b/③④⑤ 与 5-6 互证(同一条代码路径的可复现), ⑥ 与 16-2 互证。
     ⚠ ④ 只证**入参被传进去**(非空), **不证值对不对** —— 与 5-6 ④ 同口径; "记录里的操作者/参数项
@@ -8662,7 +8662,7 @@ def prog_auth_roundtrip(ser, wb=None, wb_waived=False, bp_deny=PROG_DENY_BP, var
     details.append("台面态: 起于厂外 → 厂外写两趟(均被拒) → 回厂内读回 → 厂内写 alt → 复原 d0 → **收尾交回厂外**")
     if not have_wb:
         details.append("未做: 断点观测(白盒) —— %s; 要证『停在哪个拒绝点 / 写库位置走没走到 / 入参是什么』"
-                       "需接 J-Link 重跑(断点见 ledger.md 16-1 的 F 列; 断[B] 已由 `:2952` 订正为 `:1548`)"
+                       "需接 J-Link 重跑"
                        % ("用户本次指定只做黑盒" if wb_waived else "本次无调试会话"))
     details.append("未证: 『记录里的操作者/参数项**内容**』半支 —— 本项只证两个入参非空(与 5-6 ④ 同口径), "
                    "值对不对要一份记录列解码器")
@@ -8670,7 +8670,7 @@ def prog_auth_roundtrip(ser, wb=None, wb_waived=False, bp_deny=PROG_DENY_BP, var
 
 
 # ==================== 5-9/5-10『拉闸 / 合闸』: 645 0x1C → Recd_CtrlRelay 落库(2026-09-16 建) ====================
-# 判据源 = project/knowledge/_whitebox_ledger/ledger.md:
+
 #   5-9 「观察与判据」= 每次成功拉闸一条, 含操作方式
 #   5-10「观察与判据」= 每次成功合闸一条、方式正确
 # 两条同源 —— 固件里拉/合共用 `Run_TaskRelay` 一条链, 只在命令帧操作字上分向。故证据函数只写一份,
@@ -8710,7 +8710,7 @@ RELAY_REC_CAP = P.RELAY_REC_CAP
 
 
 def _relay_criteria(op):
-    """5-9/5-10 的预设条目(源 = ledger.md 那两条「观察与判据」, 各拆成六条)。
+    """5-9/5-10 的预设条目。
 
     ⚠ ④ 只证**入参确实被传进去**(pOper 非空), **不证值对不对** —— 固件取的是**参数区**里存着的
       操作者代码(调用点前一行 `Read_ParaData(ID_Operator, …)`), 不是本帧带来的那个; "与本帧一致"
@@ -8792,7 +8792,7 @@ def relay_act_ok(txt, op):
 
 
 # ==================== 10-1『费控功能·远程』遥控裁决(2026-09-17 建) ====================
-# 判据源 = project/knowledge/_whitebox_ledger/ledger.md 10-1「观察与判据」:
+
 #   判过:  优先级高者生效; 保电期间拉闸被拦且回明确错误(ER_RlyOffKeep); 状态与事件正确
 #   判不过: 某组合放行错 → 对照 TAB_RelaySta 逐格核期望裁决
 #   ⇒ 前者与后者是**同一把尺子**的两个方向, 故判据① 就把整张表逐格对(见下"逐格转抄")。
@@ -9081,7 +9081,7 @@ def keep_end_notes(have_wb, wb_waived=False):
 
 
 def keep_criteria():
-    """10-1『远程』的预设条目(源 = ledger.md 10-1「观察与判据」, 拆成七条)。
+    """10-1『远程』的预设条目。
 
     ⚠ ② 与 ③ **不是重复**: 线上应答只装得下"被拒"(0xDC + 错误位 0x04), 而**具体拒在哪条规矩上**只落在
       `g_CtrlStat[1]` 的位上 —— ②证"拒了", ③证"按保电那条规矩拒的"。依据见本段头注。
@@ -9107,7 +9107,7 @@ def keep_criteria():
 
 
 # ==================== 12-1『保电功能·保电/解除』698 Action 通道(2026-09-21 建) ====================
-# 判据源 = project/knowledge/_whitebox_ledger/ledger.md 12-1「观察与判据」:
+
 #   判过: 保电期间拉闸被拒且回明确错误; 解除后命令可执行; 保电位正确上报
 #
 # ---- 与 10-1 的关系: 同一段裁决, 两条不同的入口 ----
@@ -9273,7 +9273,7 @@ def keep698_end_notes(have_wb, wb_waived=False):
 
 
 def keep698_criteria():
-    """12-1『保电功能·保电/解除』的预设条目(源 = ledger.md 12-1「观察与判据」, 拆成八条)。
+    """12-1『保电功能·保电/解除』的预设条目。
 
     ⚠ ①/②/③ 是**本条独有**的: 它们证的只是"698 这条入口", 而 10-1 的积木只建了 645 半支
       (10-1 自己的 details 里写着 698 那条未证)。④⑤⑥⑦ 与 10-1 的 ②③⑤⑥ 同形 ——
@@ -9306,7 +9306,7 @@ def keep698_criteria():
 
 
 # ==================== 12-2『保电功能·液晶是否显示拉闸』判据与证据(2026-09-22 建) ====================
-# 判据源 = project/knowledge/_whitebox_ledger/ledger.md 12-2「观察与判据」(= F/G/H/I 四列):
+
 #   命令态为"非合闸类"时液晶上显“拉闸”两字; 与实际液晶目测一致。
 #
 # ---- 判据链(源码; 行号逐条离线核过 `info line` / `info scope`) ----
@@ -9369,7 +9369,7 @@ LCD_WIN = tuple(((LCD_STATUS_Y // LCD_PAGE_H + p) * LCD_WIDTH_PX + LCD_LZ_X,
 def lcd_window_blocks(tag="lcd"):
     """影子缓冲那两块窗口 → `[(名, 绝对地址, 长度)]` 供 `W.aa80_ram_snapshots`(**纯规划, 不碰串口**)。
 
-    ⚠ 地址一律现算: 基址取画像 `RAM_VARS["lcd_buffer"]`(单一事实源), 块内偏移由上面那组常量算出
+    ⚠ 地址一律现算: 基址由 `swdbg.resolve.resolve("lcd_buffer")` 现算, 块内偏移由上面那组常量算出
       —— 别在这儿写死 `0x200090E0` 或 `1749`。AA80 那条路的**区内偏移**折算在 `aa80_ram_snapshots` 里做。
     基址解析不到 → 空表(读只读得到空表, 由 `lcd_window_obs` 记成"读不到")。
     """
@@ -9404,7 +9404,7 @@ def lcd_window_obs(got, state, tag="lcd"):
 
 
 def lcd_relay_criteria():
-    """12-2『保电功能·液晶是否显示拉闸』的预设条目(源 = ledger.md 12-2「观察与判据」)。库内单点。
+    """12-2『保电功能·液晶是否显示拉闸』的预设条目。库内单点。
 
     ⚠ ⑦ 本台证不了: 判据要的是"**实际液晶**上看见“拉闸”", 而四条通路读的都是内存里的影子缓冲
       (`lcd_buffer`) —— 那是**驱动液晶的那一份数据**, 不是玻璃上真出现的像素(驱动断线/背光坏/段码
@@ -9619,7 +9619,7 @@ def lcd_relay_end_notes(have_wb, wb_waived=False):
 
 
 # ==================== 12-3『保电功能·解除后本地费控根据剩余电费决定是否执行拉闸』判据与证据 ====================
-# 判据源 = project/knowledge/_whitebox_ledger/ledger.md 12-3「观察与判据」(= F/G/H/I 四列):
+
 #   本地费控 —— 解除保电且余额低于透支门限 ⇒ 不等主站再发命令, 自己续拉;
 #   远程费控 —— 解除保电后续用电, 需主站再发拉闸。
 #
@@ -9671,7 +9671,7 @@ def ao_inject_allow():
 
 def auto_off_criteria():
     """12-3『保电功能·解除后本地费控根据剩余电费决定是否执行拉闸』的预设条目
-    (源 = ledger.md 12-3「观察与判据」)。库内单点, 测试前定死。
+    。库内单点, 测试前定死。
 
     ⚠ ④ 本台证不了: 三个条件里的 `TAB_MeterSty.style == TP_Local` 是**编译期常量**
       (UserCfg.c:26; `Local_Meter` 在 UserCfg.h:102 已 define)⇒ 没有任何口能把这块表改成远程表,
@@ -9839,7 +9839,6 @@ def auto_off_end_notes(have_wb, wb_waived=False, bp_inj=None, bp_decide=None):
           "UserCfg.h:102 已 define), 本台固件烘成本地表, 没有任何帧或注入能把它改成远程表。"
           "要证须烧一版 Local_Meter 未定义的固件重跑。")
 # ==================== 13-1『主动上报』判据与证据 ====================
-# 判据源 = project/knowledge/_whitebox_ledger/ledger.md 13-1「观察与判据」。
 # 判过: 事件发生 → 按周期上送 → 应答/超时后标志复位; 帧内容含该事件对象与状态字。
 #
 # ---- 源码现场(Application\TaskReport.c; 行号逐条核过 `info line`) ----
@@ -9913,7 +9912,7 @@ def ar_inject_allow():
 
 
 def auto_rpt_criteria():
-    """13-1『主动上报』的预设条目(源 = ledger.md 13-1「观察与判据」)。库内单点, 测试前定死。
+    """13-1『主动上报』的预设条目。库内单点, 测试前定死。
 
     ⚠ ⑥ 本台**证不了**: 上送走载波(`TAB_PortOAD[PLC_M] = F2090201`, DLT698App.c:3227),
       台上无集中器/载波主站收帧。故写 `unprovable`, 整项据此记未定论 —— 不记 `_suite.py` 的`台面`项:
@@ -10008,7 +10007,7 @@ def ar_rev4(sta, rev):
 
 
 # ==================== 5-11『事件记录·负荷开关误动作』判据与证据(2026-09-17 建) ====================
-# 判据源 = project/knowledge/_whitebox_ledger/ledger.md 5-11「观察与判据」(= F/G/H/I 四列):
+
 #   命令与实测不符 ⇒ 记失败事件; 一致 ⇒ 正常、不误记; 操作方式/时标正确。
 #   「待核」那半句(一致却记失败 ⇒ 核比对判据与去抖 / 看是否误判硬件反馈)落在判据⑤ 的文字里。
 #
@@ -10184,7 +10183,7 @@ def rfl_inject_allow():
 
 
 def relayfail_criteria():
-    """5-11 的**预设条目**(源 = ledger.md 5-11 的「观察与判据」+ 操作步骤 + 待核那半句)。测试前定死。
+    """5-11 的**预设条目**。测试前定死。
 
     拆分说明(每条都答得出 falsify, 见 `relayfail_roundtrip` 内各 add 的 falsify):
       · ① / ② 拆开 —— 「不符」与「一致」是**两条独立的写库路径**(TaskRecord.c:1330 与 :1348)。
@@ -10207,7 +10206,6 @@ def relayfail_criteria():
           或 `g_FailStat[0] < 2` 才走到, 见段头「未证」。这一条**不覆盖**拉闸方向。
     """
     return {
-        # ⚠ 这两条的正文与 ledger.md 的 J 列**逐字相同**。
         #   2026-09-18 改口径: 「:1330/:1348 写库位置被执行」是**过claim** —— 那两个断点是写库
         #   **语句的首行**(真调用 @0x1ec70/@0x1ecea 在其后), 任一 Read_CurkWh 失败就提前
         #   return、一个字都不写, 而断点已经停过 ⇒ 落库与否**只认串口侧**。
@@ -10710,7 +10708,7 @@ def relayfail_roundtrip(ser, wb=None, wb_waived=False, wait=3.0, neg_window=4.0,
     details = ["%s: %s" % (r["name"], r["detail"]) for r in recs]
     if not have_wb:
         details.append("未做: 断点观测(白盒) —— %s; 要证『两条写库路径 / 现算规则 / 开关状态位』"
-                       "需接 J-Link 重跑(断点见 ledger.md 5-11 的 F 列)"
+                       "需接 J-Link 重跑"
                        % ("用户本次指定只做黑盒" if wb_waived else "本次无调试会话"))
     details.append("未证: 「真电压下硬件反馈不跟随」那一半 —— 本台交流 0V, g_RelayFlg 恒分闸、"
                    "75%%Un 窗口常闭, 「命令≠实测」这个状态是**注入造出来的**; 要证须把台面电压加到 "
@@ -10723,7 +10721,7 @@ def relayfail_roundtrip(ser, wb=None, wb_waived=False, wait=3.0, neg_window=4.0,
     return recs, details, scope
 
 
-# 规格 = ledger.md 4-7。**前提订正(2026-09-16)**: 规格的 E/H/I/K 四列都写「本台非本地表 ⇒
+# **前提订正(2026-09-16)**: 规格的 E/H/I/K 四列都写「本台非本地表 ⇒
 #   `TaskFreeze.c:875-878` 直接返回不产生」, 那是**错的**。两条独立证据:
 #     ① 源码 `Config/MengXi/UserCfg.h:102` 走的是 `#define Local_Meter` 那条活动分支,
 #        `:344-345` 定义 `TP_Remote 0` / `TP_Local 1`;
@@ -10982,7 +10980,7 @@ BFY_FALSIFY = {
 
 
 def billfrez_y_criteria():
-    """4-7 的**预设条目**(源 = ledger.md 4-7 的「观察与判据」I 列 + 操作步骤 H 列)。测试前定死。
+    """4-7 的**预设条目**。测试前定死。
 
     ⚠ 规格 I 列原文两条是「非本地表不产生; 本地表在年/阶梯结算边界正确生成并结转」。**非本地表
       那半支在本台不适用** —— 本台是本地表(见本节头的前提订正), 风格判定放行, 所以"不产生"要证的
@@ -11314,7 +11312,7 @@ def _yst_raw_kept(raw, dose_bytes=YST_DOSE_BYTES):
 
 
 def year_step_criteria():
-    """11-1 的**预设条目**(源 = ledger.md 11-1 的「观察与判据」I 列 + 操作步骤 H 列)。测试前定死。
+    """11-1 的**预设条目**。测试前定死。
 
     ⚠ 规格 I 列原文三条:「年边界档位电量结转正确; 冻结一条; 档状态与规范一致(远程费控不适用)」。
       照 4-7 的口径:
@@ -11626,7 +11624,7 @@ def _mst_expected(month_back=1, date_bytes=MST_PARAM_BYTES):
 
 
 def month_step_criteria():
-    """11-2 的**预设条目**(源 = ledger.md 11-2 的「观察与判据」I 列 + 操作步骤 H 列)。测试前定死。
+    """11-2 的**预设条目**。测试前定死。
 
     ⚠ 规格 I 列原文三条:「月阶梯按月结转正确; 与年阶梯不混; 远程费控不适用」, 「判不过/待核」里
       写着「误按年→核 ID_YearCount1 组别」。落成五条:
@@ -12135,7 +12133,7 @@ def frez_store_tail(block, idxs, got_len):
 
 
 def minute_frez_criteria():
-    """4-2「分钟冻结」预设条目(源 = `_whitebox_ledger/ledger.md` 4-2 那一节的【逐条】)。
+    """4-2「分钟冻结」预设条目。
 
     ⚠ 本函数与那一节的文字**逐字相等**, 改一处就得两处一起改。
     """
@@ -12165,7 +12163,6 @@ def minute_frez_criteria():
 def minfrez_fill_criteria():
     """4-2「铺满 365 天」那一条 —— **只有 `--fill-year` 模式才进分母**。
 
-    ⚠ 与 `_whitebox_ledger/ledger.md` 4-2 那一节的【逐条】⑬ 逐字相等, 改一处就得两处一起改。
     ⚠ 它跟 ⑧⑩ 不是一回事: ⑧ 是固件自报的深度值、⑩ 是照那个深度离线算排不排得下, 两条都不真铺;
       这一条是**真写 35040 条**, 写完再看最旧那条还在不在。默认跑次不做它(它要连跑十几小时),
       所以默认跑次分母是 12、它不在里面 —— 报分母时必须说清是哪一种跑次。
@@ -12240,7 +12237,7 @@ def hourfrez_month_target(now_dt):
 
 
 def hour_frez_criteria():
-    """4-3「小时冻结」预设条目(源 = `_whitebox_ledger/ledger.md` 4-3 那一节的【逐条】)。
+    """4-3「小时冻结」预设条目。
 
     ⚠ 本函数与那一节的文字**逐字相等**, 改一处就得两处一起改。
     """
@@ -12405,7 +12402,7 @@ def frez_catchup_plan(now_dt, prd, add, kmin=3, months=24):
 
 
 def day_frez_criteria():
-    """4-4「日冻结」预设条目(源 = `_whitebox_ledger/ledger.md` 4-4 那一节的【逐条】)。
+    """4-4「日冻结」预设条目。
 
     ⚠ 本函数与那一节的文字**逐字相等**, 改一处就得两处一起改。
     """
@@ -12436,7 +12433,7 @@ def day_frez_criteria():
 
 
 # ============================ 4-1 瞬时冻结: 对象表读解 + 判据 ============================
-# 判据照 `简洁正确的测试思路.md` 的「4-1」四步写死: ①时标 ②对象表 ③读回 ④条数封顶。
+# 判据按「4-1」四步写死: ①时标 ②对象表 ③读回 ④条数封顶。
 # 两张表都是 FLASH 常量(与本该不该停核无关), 用探针按符号地址读; 停核只用来读"触发那一刻"的量。
 FREZOBJ_SYM = "TAB_FrezObj"     # 冻结对象表: 12 行 × 32 个 INT16U(前 30 槽对象号, 末 2 槽周期/条数)
 SELOBJ_SYM = "TAB_SelObj"       # 对象号 → {OAD, len, local, type*} 的查询表
@@ -12469,7 +12466,7 @@ FREZOBJ_ACT_DEL = "50020500"    # 删除一个关联对象
 D698_LONG_UNSIGNED = 0x12       # 698 数据域类型码 long-unsigned(DLT698App.c:142)
 D698_OAD = 0x51                 # 698 数据域类型码 OAD(DLT698App.c:158)
 
-# 规范点名的每行出厂配置(源: `简洁正确的测试思路.md` 的 4-1② / 4-2② / 4-3② / 4-4① / 4-6① / 4-7⑧)。
+# 规范点名的每行出厂配置。
 # 每项 = (对象号, 该对象号在 TAB_SelObj 里查出来的 OAD)。
 # ⚠ 4-2 那一行 md 写「17 个」而本机 .out 里是 **18 个**: 多出的 750 属 `UserCfg.c:530` 的
 #   `en_NEUTRALLINE_SAMPLING`(中性线采样)分支, 本机编了那一支 —— 判据按实物, md 已同步订正。
@@ -12950,7 +12947,7 @@ def immed_frez_snapshot(ser, tag="", oads=IMMED_FREZ_ENE_OADS, pos=1, chip=None,
 
 # ============================ AA80 冻结打点(4-1 瞬时冻结的**佐证观测**) ============================
 # 它证的是**另一件事**: 「AA80 内存 diff」与「698 读回」两条**互相独立**的证据同向 ⇒ "冻结落了库"
-# 这件事不依赖 IAR 断点。4-1 的判据真源仍在 ledger.md(IAR 侧看 `Save_FrezData` 的局部量那一半)。
+# 这件事不依赖 IAR 断点。4-1 的判据要 IAR 侧看 `Save_FrezData` 的局部量那一半。
 # ⚠ AA80 快照全程不停核: 没有"停住 → 8s 看门狗复位"那个坑。
 PING_BLOCK_NAMES = P.PING_BLOCK_NAMES
 PING_SNAP_CLAMP = P.PING_SNAP_CLAMP
@@ -12969,7 +12966,7 @@ _PING_FALSIFY = {
 def aa80_freeze_ping_criteria():
     """4-1「瞬时冻结」的**佐证观测**预设条目(这两条就写在下面)。
 
-    ⚠ 它**不认领 4-1 的判据条目** —— 4-1 的判据真源在 ledger.md(要 IAR/断点看 `Save_FrezData`)。
+    ⚠ 它**不认领 4-1 的判据条目** —— 那要 IAR/断点看 `Save_FrezData`。
       这里是**另一条独立通路**给出的同向证据; 两者同向才谈得上"落库证据成立、不必依赖 IAR"。
     """
     return {
@@ -13098,7 +13095,7 @@ def aa80_vs_swd_compare(ser, names, pb, *, stable=(), resolve=None, read_aa80=No
 
     两条通路**都由调用方注入**, 与本模块的层纪律一致(本文件不许 import swdbg):
       · `pb`       —— J-Link 会话对象, 只要能 `read_abs(addr, size) -> bytes`(`swdbg.probe.Probe`);
-      · `resolve`  —— 变量名 → `(绝对地址, 长度)`(脚本传 `common.varresolve.resolve`);
+      · `resolve`  —— 变量名 → `(绝对地址, 长度)`(脚本传 `swdbg.resolve.resolve`);
       · `read_aa80`—— 变量名 → `bytes|None` 的串口读(脚本传 `cmd_bank.watch_vars` 那一支)。
     `stable` = 那一批"绝不能碰的稳定态"变量名(出现漂移即异常, 不是正常抖动)。
     ⚠ 没给 `read_aa80` 就自己按串口读(库内已有的 `watch_vars`)。
@@ -13268,7 +13265,7 @@ def _strip_flags(argv):
 
 
 # ============================ 1-2『电能数据 · 与计量芯保持一致』(2026-09-11) ============================
-# 规格(ledger.md 1-2)触发链: 计量芯帧 → Communicate.c:1039 Save_Caculator_Data
+# 触发链: 计量芯帧 → Communicate.c:1039 Save_Caculator_Data
 #   → kWhData.c:368 Save_CurEnergyData(g_CurkWh 落值 + Fetch_CRC) / :444 Update_Rate_Energy(费率分摊)
 #   → 698 抄电能 → kWhData.c:127 Read_CurkWh(:187 Get_CurkWh 取数) 回读。
 # 判过原文: 『698 读回值 = 计量芯来值 = 费率分摊和; 多帧稳定一致』。
@@ -13523,7 +13520,7 @@ def kwh_num(text):
 
 
 def energy_mirror_criteria():
-    """1-2 的**预设判据条目**(测试前定死; 源 = ledger.md 1-2「观察与判据」的『判过』那一句)。
+    """1-2 的**预设判据条目**。
     原文『698 读回值 = 计量芯来值 = 费率分摊和; 多帧稳定一致』拆成 11 条钥匙。③④ 各拆 a/b
     —— 不拆就会拿固件**明确判定不可用**的字节去换算/求和, 再把「前提不成立」记成
     「等式不成立」(假 FAIL), 或者反过来把「固件按设计回落」记成「取项错」。
@@ -14180,7 +14177,7 @@ def energy_mirror_restart_evidence(a_slots, b_slots, cols, oads=("00000400", "00
 # ============================================================================
 # 16-2 软件要求 · 软件比对
 # ============================================================================
-# 规格(源 project/knowledge/_whitebox_ledger/ledger.md 16-2):
+
 #   开发状态 = 已实现(读版本/程序集成标识 + 升级内真比对); 电子签名未实现
 #   可达性   = 可测(读+比对); 数字签名核对 = 未实现, 不测
 #   断点     = 断[A] DLT698App.c:8916 / 断[B] DLT645App.c:6188 / 断[C] DLT698App.c:17586
@@ -14228,11 +14225,11 @@ def energy_mirror_restart_evidence(a_slots, b_slots, cols, oads=("00000400", "00
 #     (最低位在最前)。再经共享尾部那次 `Spread_OctString` 翻转(见上一条 ⚠)⇒
 #     **线上那 8 个字符 = `"%08d" % (u32 % 10**8)`, 最高位在最前** —— 两个形态各归一半判据,
 #     函数就是 `sv_digits`(线上)与 `sv_digits_buff`(buff), 后者是前者的倒序。
-#   ⚠ **本库只实现"给定字节按这个口径重算"**(`sv_digits` + `common.elfsym.wordsum`);
+#   ⚠ **本库只实现"给定字节按这个口径重算"**(`sv_digits` + `swdbg.elf.wordsum`);
 #     口径本身住这段注释里 —— 换一版固件改了累加方式, 那两个纯函数**不会自己知道**。
 #
 # ---- 应用区那一段为什么"与填充假设无关"(这条决定判据②a 敢不敢报) ----
-#   `common.elfsym.image(0x4000, 0x80000)` 的覆盖计数 == 区间长(实测 507904/507904, APP 的
+#   `swdbg.elf.image(0x4000, 0x80000)` 的覆盖计数 == 区间长(实测 507904/507904, APP 的
 #   PT_LOAD 段首尾相接铺满)⇒ 一个填充字节都用不到 ⇒ 重算出来的值与本台"未编程区读回 0x00 还是
 #   0xFF"无关。整片(`0xFF3002`)与出厂区(`0xFF3003`)则**含 boot 区** [0, 0x4000), 而 boot 是另一个
 #   IAR 工程(`EZ315-FM33A0610EV-Boot`), 它的 `.out` **不在本卡带的固件声明里**
@@ -14399,7 +14396,7 @@ def sv_read_645_fac(ser, wait=3.0):
 
 
 def softver_criteria():
-    """16-2 的**预设条目**(源 = ledger.md 16-2 的「观察与判据」I 列 + 操作步骤 H 列)。测试**前**定死。
+    """16-2 的**预设条目**。测试**前**定死。
 
     拆分说明(每条都答得出 falsify, 见 `softver_roundtrip` 内各 `add` 的 falsify):
       · ① 拆成 ①a/①b/①c —— 三条读路是**三段互不相干的代码**, 且两条 645 的字节序相反。
@@ -14445,7 +14442,7 @@ def softver_criteria():
                             "函数。要证须真走一次整包下载, 并分别造 CRC 不符/版本不符两种包 —— "
                             "那是台面与厂商工具的事, 不是本仓能造的"},
         "④": {"text": "电子签名核对(不符则拒)",
-              "unprovable": "源码那一支是空的(`DLT698App.c:17603` 只有注释、无代码), 与 ledger.md 16-2 的"
+              "unprovable": "源码那一支是空的(`DLT698App.c:17603` 只有注释、无代码), 与 16-2 的"
                             "『可达性』栏原文一致(『数字签名核对=未实现, 不测』)⇒ 没有可证的对象。"
                             "**这不是『本台证不了』, 是固件里没有这一段** —— 哪天厂商补上实现, "
                             "本条要改回可证并重建"},
@@ -14672,7 +14669,7 @@ def softver_roundtrip(ser, wb=None, wb_waived=False, wait=3.0, out_path=None,
 # ============================================================================
 # 1-3 电能数据 · 支持 2 / 4 位小数与尾数
 # ============================================================================
-# 规格(ledger.md 1-3)判过三条: ①改 DotE→液晶 2/4 位随之切换; ②借位联动正确;
+# 判过三条: ①改 DotE→液晶 2/4 位随之切换; ②借位联动正确;
 # ③(有源)698 读数按对象位数量纲正确。两种观测的分工是**死的**, 不是可选的:
 #   · ①② —— **只有断点观测给得出**: 位数是 `Disp_Energy` 函数内的局部量 `dot`(寄存器驻留),
 #     液晶本身没有回读入口; 而且固件**外部改参口全注释**(698 写 0x40070200=DLT698App.c:10338
@@ -14758,7 +14755,7 @@ def disp_digit_relation(v6, v4, v2, vm):
 
 
 def disp_digit_criteria():
-    """1-3 的**预设判据条目**(测试前定死; 源 = ledger.md 1-3「观察与判据」的『判过』那一句)。
+    """1-3 的**预设判据条目**。
     原文『①改 DotE→液晶 2/4 位随之切换; ②借位联动正确; ③(有源)698 读数按对象位数量纲正确』,
     其中 ② 拆成下限/写入两支(源码里是两处独立判定, 一条判据一个 falsify 对不上两处)。"""
     return {
@@ -15004,7 +15001,7 @@ def disp_digit_netzero(gd):
 
 
 # ==================== 7-4『通信 · 路由扩展模组、计量芯 —— SPI 链路冒烟』(2026-09-21 建) ====================
-# 规格(源 project/knowledge/_whitebox_ledger/ledger.md 7-4):
+
 #   判过原文『请求帧类型/周期恒稳定、落位值随帧更新 ⇒ 管理芯只轮询读取、不自计算』。
 #   本行只有计量芯 SPI 通道可冒烟; 扩展模组交互与加解密路由 = 开发标注未实现 ⇒ 不给断点、不测。
 #
@@ -15186,9 +15183,9 @@ SPI_FALSIFY = {
 
 
 def spi_link_criteria():
-    """7-4 的**预设判据条目**(测试前定死; 源 = ledger.md 7-4「观察与判据」的『判过』那一句)。
+    """7-4 的**预设判据条目**。
 
-    ⚠ 这五条**逐字抄 ledger.md 7-4 的 J 列**: 改那边就得同步改这儿。"""
+    """
     return {
         "①": "请求恒为固定读: 停 Communicate.c:1006 连取三拍, 发出去的 29 字节(g_SPIMBuff[0..28], = sizeof(TAB_GetBoxData))逐字节全等, 且[0..3]=5A5A5A5A、[4]=0x68、[28]=0x16",
         "②": "轮询闭合: 每一拍 :1006 请求之后都等到一次 :1039 落位(发出请求要有帧回来并落位), 整场落位数 > 0",
@@ -15513,9 +15510,9 @@ DISP_FALSIFY = {
 
 
 def frame_dispatch_criteria():
-    """7-1 的**预设判据条目**(测试前定死; 源 = ledger.md 7-1「观察与判据」的 J 列逐条)。
+    """7-1 的**预设判据条目**。
 
-    ⚠ 这几条**逐字抄 ledger.md 7-1 的 J 列**: 改那边就得同步改这儿。"""
+    """
     return {
         "①": "帧到即停: 从 485 口或蓝牙口发一帧 698 读表钟(单播本表地址), DLT698Link.c:283 "
               "Analyse_698Prot 首条可执行语句 3 s 内命中",
@@ -16150,9 +16147,7 @@ LAMP_BASE_KEYS = (LAMP_TICK, DISP_STAT, DISP_SLCT)   # 发帧前那一次基线�
 
 
 def lamp_wake_criteria():
-    """8-7 的**预设判据条目**(测试前定死; 源 = ledger.md 8-7「观察与判据」的 J 列逐条)。
-
-    ⚠ 这五条**逐字抄 ledger.md 8-7 的 J 列**: 改那边就得同步改这儿。
+    """8-7 的**预设判据条目**。
 
     为什么不判"背光那个 GPIO": 背光由 `TaskSystem.c:413` 每轮按 `Get_LampTimer()` 开/关,
     而 `Get_LampTimer()` 为真有两路 —— `u32LampTicker != 0` **或** `g_DispStatus == ST_FullDisp`。
@@ -16406,9 +16401,9 @@ RS485_FALSIFY = {
 
 
 def rs485_dispatch_criteria():
-    """7-3 的**预设判据条目**(测试前定死; 源 = ledger.md 7-3「观察与判据」的 J 列逐条)。
+    """7-3 的**预设判据条目**。
 
-    ⚠ 这六条**逐字抄 ledger.md 7-3 的 J 列**: 改那边就得同步改这儿。"""
+    """
     return {
         "①": "645 帧认下: 从 485 口发一帧 645 读日期时间(单播本表地址), Communicate.c:338 "
               "3 s 内命中(那一句只有 645 支认下这帧才走得到)",
@@ -16729,9 +16724,9 @@ PLC_RELAY_FALSIFY = {
 
 
 def plc_relay_criteria():
-    """7-2 的**预设判据条目**(测试前定死; 源 = ledger.md 7-2「观察与判据」的 J 列逐条)。
+    """7-2 的**预设判据条目**。
 
-    ⚠ 这七条**逐字抄 ledger.md 7-2 的 J 列**: 改那边就得同步改这儿。"""
+    """
     return {
         "①": "698 中继入口命中并归 485 口: 从 485 口发一帧 698(地址特征的逻辑地址位置 1, 即转发给计量芯的帧), "
               "DLT698Link.c:307 3 s 内命中, 停住读入参 port == 1",

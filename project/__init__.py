@@ -10,9 +10,8 @@ project/ —— 电表"每表环境包"(换工程 = 换 CURRENT 指向)
   <画像名>.py          ① 数据画像(纯常量): 身份/双芯AF/表号/RAM地址图/OAD/.out 路径
   <画像名>.frames.json ② 该表"已验证帧"(叠加层, cmd_bank 合并进目录)
   <画像名>.meta.json   ③ 环境清单: 固件锁(build/验期) + 双芯可达能力 + 串口(机器数据)
-  env_check.py         ④ 装包即验: env_check(online=?) 断言环境条件在不在
 换测另一块表: 在 project/ 加一份同款三件套(前缀换成该表名), 把本文件的 CURRENT 指过去即可;
-核心(meterlib)与脚本原样复用, 换的只有这份环境包。env_check 永远验 CURRENT。
+核心(meterlib)与脚本原样复用, 换的只有这份环境包。
 
 加一块新表的四步
 ----------------
@@ -22,7 +21,6 @@ project/ —— 电表"每表环境包"(换工程 = 换 CURRENT 指向)
 2. 写 `<表名>.meta.json` 环境清单: 固件锁 / 双芯可达 / 串口 + `firmware` 块(含 `out_sha256`)。
    可选 `<表名>.frames.json` 登记该表已验证帧。
 3. `python scripts/_probe_all.py --from-project`(或给目录)探这块表 → `探测报告/<表名>_探测.md`。
-4. 把本文件的 `CURRENT` 指过去, 跑 `python -m project.env_check` 验到 `READY`。
 
 **这里还是"组合根"**(2026-09-10 阶段二)
 --------------------------------------

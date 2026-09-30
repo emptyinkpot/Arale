@@ -5,10 +5,10 @@ _check_bench.py —— 台面体检: 一条命令问清 "串口和 SWD 两条链
 位置: 帧收发基础/scripts/ (顶层运行脚本; 库在 src/common/bench.py)
 运行: 在 帧收发基础/ 下 —— python scripts/_check_bench.py [--full] [--serial-only|--swd-only]
 
-    python scripts/_check_bench.py               快检(默认): 离线断言 + 串口 + 探针
+    python scripts/_check_bench.py               快检(默认): 串口 + 探针
     python scripts/_check_bench.py --full        再加 SWD 三关(开 gdb 会话, 验断点/观察点)
-    python scripts/_check_bench.py --serial-only 只跑离线断言 + 串口
-    python scripts/_check_bench.py --swd-only    只跑离线断言 + 探针(加 --full 才带三关)
+    python scripts/_check_bench.py --serial-only 只跑串口
+    python scripts/_check_bench.py --swd-only    只跑探针(加 --full 才带三关)
 
 本脚本**不是** `project/tests/` 里的测试子项: 它不产生测试结论、不写 `log/`。它只回答台子通不通,
 随时可以单独喊一声。以后 `project/tests/_suite.py` 要在每项之前插一次, 是 import 库里的
@@ -21,6 +21,7 @@ import time
 
 
 from common.bench import check_bench                    # noqa: E402
+from meterlib import p698                          # noqa: E402  (import 时装上 portsel 探活函数)
 from common.cli import guard_argv                       # noqa: E402
 from common.console import ensure_utf8_stdout           # noqa: E402
 

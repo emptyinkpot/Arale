@@ -178,6 +178,15 @@ def crit_unprovable(v):
     return None if isinstance(v, str) else (v.get("unprovable") or None)
 
 
+def crit_stage(v):
+    """条目 → **阶段名**(没有声明 → None)。
+
+    声明了阶段的子项: 汇总按阶段分组打印, 每个阶段单独给结论。一条都没声明的子项保持原来的
+    平铺 —— 分组是**可选**的, 别的子项一个字不用改。
+    """
+    return None if isinstance(v, str) else (v.get("stage") or None)
+
+
 def rec(name, ok, detail="", crit=None, obs=SERIAL, falsify=None, trig=None):
     """造一条证据记录 —— **本模块与 meterlib/swdbg 之间的唯一契约**。
 
@@ -257,7 +266,7 @@ def crit_states(criteria, records):
                 why = "认领它的证据没做成(ok=None): %s" % "; ".join(
                     "%s(%s)" % (r["name"], r["detail"]) for r in strong)
         out.append({"no": no, "text": crit_text(text), "state": state, "why": why,
-                    "ev": strong, "weak": weak})
+                    "ev": strong, "weak": weak, "stage": crit_stage(text)})
     return out
 
 
@@ -349,9 +358,45 @@ def render(title, criteria, records, obs, skipped=(), notes=(), degradations=(),
         for c in cs:
             if any(r.get("trig") for r in c["ev"]):
                 out.append("        └ %s 的达成**牵涉注入**(复核时须照同一造法复现)" % c["no"])
+    # ---- 按阶段分组打印(可选) ----
+    # 有条目声明了 `stage` ⇒ 分组 + 逐阶段结论 + 阶段汇总; 一条都没声明 ⇒ 保持原来的平铺。
+    # 分组的理由是"结论该落在规范的那一条上", 而不是落在某一个测试点上:
+    # 一个阶段里只要有一条 FAIL, 这个阶段就是 FAIL —— 与整体判定的口径一致, 只是层级低一层。
+    _order = []
     for c in cs:
-        out.append("   %s %s %s" % (mark[c["state"]], c["no"], c["text"]))
-        out.append("          └ %s" % c["why"])
+        if c.get("stage") not in _order:
+            _order.append(c.get("stage"))
+    _tally = []
+    if not (len(_order) > 1 or (_order and _order[0])):
+        for c in cs:
+            out.append("   %s %s %s" % (mark[c["state"]], c["no"], c["text"]))
+            out.append("          └ %s" % c["why"])
+    else:
+        for s in _order:
+            grp = [c for c in cs if c.get("stage") == s]
+            n_ok = sum(1 for c in grp if c["state"] == "满足")
+            n_bad = sum(1 for c in grp if c["state"] == STATUS_FAIL)
+            n_tbd = len(grp) - n_ok - n_bad
+            out.append("")
+            out.append("【%s】" % (s or "(未分阶段)"))
+            for c in grp:
+                out.append("   %s %s —— %s" % (mark[c["state"]], c["no"], c["text"]))
+                out.append("          └ %s" % c["why"])
+            verdict = (STATUS_FAIL if n_bad else
+                       ("通过" if n_ok == len(grp) else
+                        ("未证" if n_ok == 0 else "部分通过")))
+            tail = []
+            if n_bad:
+                tail.append("%d 项失败" % n_bad)
+            if n_tbd:
+                tail.append("%d 项未证" % n_tbd)
+            out.append("   ▸ %s 结论: %s (%d/%d 通过%s)"
+                       % (s or "(未分阶段)", verdict, n_ok, len(grp),
+                          "，" + "，".join(tail) if tail else ""))
+            _tally.append((s, verdict, n_ok, len(grp)))
+        out.append("")
+        out.append("   ── 阶段汇总: %s"
+                   % " | ".join("%s=%s" % (s or "?", v) for s, v, _o, _n in _tally))
     for r in orphans(criteria, records):
         out.append("   [!] 证据「%s」认领的 crit=%r 不在预设条目里 → 不计入任何条目"
                    % (r["name"], r["crit"]))

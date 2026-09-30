@@ -32,8 +32,8 @@ AA80 语义铁律
 import time
 
 from common import profile
-from common import elfsym
-from common import varresolve
+from swdbg import elf as elfsym
+from swdbg import resolve as varresolve
 from common.loglabel import opout
 from common.portsel import send_frame, tx_recv
 from common.snapdiff import aa80_snap_diff
@@ -90,29 +90,19 @@ def aa80_ram_snapshots(ser, blocks, tag="snap", wait=2.0):
 
 
 def _pvar_addr(name):
-    """变量名 → (绝对addr, size) 或 None。主源 = 工程画像 RAM_VARS(硬编码单一源, 校表稳定,
-    固件该地址离线已核对 .out; 换工程=换画像)。画像未登记的名字 → 回退 .out 符号表(仅临时/归档探针用,
-    bench 无 .out 时这类名字读不了, 属预期 —— 正式白盒变量都应登记进画像).
-
-    实现住 common/varresolve(**串口与 SWD 两条通路共用同一份**), 本函数保留为薄壳 —— 私有名
-    _pvar_addr 仍被 cmd_bank 与旧探针引用, 且它代表"画像优先 + .out 回退"这个语义,
-    不要绕开它去别处解析。"""
+    """变量名 → (绝对addr, size) 或 None。源头 = 当前 `.out` 的符号表(swdbg.elf)。"""
     _wire()          # 换过画像就重装一次(没换则零开销, 见 varresolve._ensure_wired)
     return varresolve.resolve(name)
 
 
 def _wire():
-    """确保解析器喂的是**当前**画像。放这里是因为本模块是解析的入口。
-
-    早先那句装配发生在 meterlib/ez_meter.py 的模块体里, 靠"它是 L0、谁用谁就会 import 它"保证顺序
-    —— 那是一条第 import 次序的隐形依赖。现在装配由 varresolve.resolve() 自己按需触发
-    (`wire_from_profile` 是全仓唯一的自动装配点), 这里补一次只是把"换过画像"的时机说清楚。"""
+    """把当前画像的 .out 路径喂给解析器; 换过画像就重装一次, 没换则零开销。"""
     return varresolve.wire_from_profile()
 
 
 def watch_vars(ser, names, tag="vars", wait=2.0):
-    """读一组【命名】管理芯 RAM 变量(Watch 等价, 免 IAR 断点): 地址+长度按名解析(工程画像 RAM_VARS 为主,
-    .out 回退, 见 _pvar_addr), AA80 区1(RAM)逐变量直读 → {name: bytes|None}; 打印  name @绝对地址 [长B] = hex.
+    """读一组【命名】管理芯 RAM 变量(Watch 等价, 免 IAR 断点): 地址+长度按名解析(见 _pvar_addr),
+    AA80 区1(RAM)逐变量直读 → {name: bytes|None}; 打印  name @绝对地址 [长B] = hex.
     ⚠ 只读管理芯本区变量(AA80 读不到计量芯); 画像/符号都无 → 跳过并打印原因.
     白盒判读在上层(看某变量前后是否变/值与记录对齐), 本函数只取变量值."""
     print("[AA80 Watch %s]" % tag)
@@ -131,13 +121,13 @@ def watch_vars(ser, names, tag="vars", wait=2.0):
 
 def named_blocks(*names, clamp=None):
     """变量名 → [(name, 绝对addr, size)] 供 aa80_ram_snapshots/aa80_snap_diff.
-    地址/长度按名解析(工程画像 RAM_VARS 硬编码单一源为主, .out 回退, 见 _pvar_addr)。
-    脚本只给变量名、不摸地址; 结算等"绝不能碰的稳定态"变量都应登记进画像 RAM_VARS(role=stable),
+    地址/长度按名解析(见 _pvar_addr)。
+    脚本只给变量名、不摸地址; 结算等"绝不能碰的稳定态"变量在画像里登记 role=stable,
     保证 bench 无 .out 也能定址校表。解析缺失 → 跳过并打印。纯解析, 不碰串口.
 
     clamp: 每块 size 上限(AA80 单次负载 ≤128B; 超长变量按此截读, 不改画像里的真实长度)。
 
-    处理逻辑与 SWD 通路共用同一份 common/varresolve.blocks, 本函数是薄壳。"""
+    处理逻辑与 SWD 通路共用同一份 swdbg/resolve.blocks, 本函数是薄壳。"""
     return varresolve.blocks(*names, clamp=clamp)
 
 
@@ -160,7 +150,7 @@ class WatchPoint:
         if symbol is not None:
             a = elfsym.addr_of(symbol)
             if a is None:
-                self.err = "符号 %r 不在 .out RAM 对象表(elfsym)" % symbol
+                self.err = "符号 %r 不在 .out RAM 对象表" % symbol
                 return
             self.region, self.offset = abs_to_aa80(a)
         elif addr is not None:

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """console.py —— 控制台编码单点(与协议无关; 谁要往 stdout 打中文都引这里)
 
-为什么单独一个文件: 这段逻辑原先在 meterlib 里被复制了 5 份(cmd_bank/aa80/elfsym/watch_runner/whitebox),
+本模块这段逻辑在 meterlib 里被复制过 5 份(cmd_bank/aa80/elf/watch_runner/whitebox),
 其中 cmd_bank 那份后来单独修强了(幂等 + 非可重配流回退), 另外 4 份还是简化版 —— 典型的"复制粘贴各自演化"。
 收敛到一处, 以后只改这里。
 

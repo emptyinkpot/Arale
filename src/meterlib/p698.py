@@ -21,7 +21,7 @@ meterlib/p698.py —— DL/T698.45 协议: 组帧 / 校验 / 解码 / 对象模�
 
 后半截**必须发一帧去问**, 而那一帧是 698 的(按本表服务器地址单播读表钟)。让 common 认识 698,
 就把中立层弄脏了。所以这一段留在这里, 由本模块 import 时用 `portsel.set_probe()` 装进去
-(装配点与 common/varresolve 的 configure 同一套做法)。
+(装配点与 swdbg/resolve 的 configure 同一套做法)。
 
 ⚠ 将来换通路(比如 IIC), 要换的是 `handshake_clock` 这一句, 不是整个 `open_com`。
 

@@ -229,11 +229,12 @@ def main(argv=None):
     ap = argparse.ArgumentParser(
         prog="python -m swdbg.selfcheck",
         description="三关验链路: 探针 + SWD / FPB 断点 / DWT 观察点。")
-    ap.add_argument("--out", default=None, help=".out 路径(默认取画像 CURRENT.OUT_PATH)")
+    ap.add_argument("--out", default=None, help=".out 路径(默认取当前画像的 OUT_PATH)")
     args = ap.parse_args(argv)
 
-    from project import CURRENT
-    out = args.out or CURRENT.OUT_PATH
+    from common import profile
+    P = profile.current()
+    out = args.out or P.OUT_PATH
 
     print("== 链路自检 ==")
     print("   .out: %s" % out)
@@ -246,7 +247,7 @@ def main(argv=None):
     g = None
     t = time.time()
     try:
-        g = breakpoint.Session(out=out, watchdog=CURRENT.IWDT_SERV, inject_allow=())
+        g = breakpoint.Session(out=out, watchdog=P.IWDT_SERV, inject_allow=())
         g.open()
     except Exception as exc:
         r.step(1, "探针 + SWD", False, _short(exc), halt_on_fail=True)

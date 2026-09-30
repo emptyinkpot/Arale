@@ -52,12 +52,12 @@ import re
 import subprocess
 import time
 
-from common import elfsym
+from swdbg import elf as elfsym
 from common import loglabel
 
 __all__ = ["build", "get_map", "map_of", "calls_of", "func_entry", "insns_of",
            "disasm", "addr_tok", "GdbError",
-           "resolve_spec", "offline_map", "src_at", "func_addr", "line_start", "line_addr"]
+           "vars_resolve", "resolve_spec", "offline_map", "src_at", "func_addr", "line_start", "line_addr"]
 
 CHUNK = 0x200            # 每次 `-data-disassemble` 的窗口(实测 0.04s / 约 108 条指令)
 FEED_EVERY = 1.0         # 建图时每隔这么多秒喂一次狗(IWDT 约 8s 复位, 留足余量)
@@ -272,6 +272,7 @@ def build(g, quiet=None):
         for a, t in f["insns"]:
             insn_at[a] = (fn, t)
     m = {"funcs": out_funcs, "syms": syms, "insn_at": insn_at,
+         "vars": _read_vars(g.out),
          "lines": _read_lines(g.out),
          "lo": insns[0][0] if insns else lo,
          "hi": (insns[-1][0] if insns else hi), "n_insns": len(insns),
@@ -321,6 +322,23 @@ def _calls_of(rows):
 # ============================================================================
 # ④ 查询 —— `breakpoint` 那一层只走这四个口子, 谁都不许再反汇编
 # ============================================================================
+def _read_vars(out):
+    """`{变量名: {addr, size, section, type}}` —— 前三样来自 .out 的符号表, type 来自 DWARF(没有则 "")。"""
+    from swdbg import elf
+    try:
+        objs = elf.ram_objects(out)
+    except Exception:
+        return {}
+    types = elf.var_types(out)
+    return {n: {"addr": a, "size": sz, "section": sec, "type": types.get(n, "")}
+            for n, (a, sz, sec) in objs.items()}
+
+
+def vars_resolve(g, name):
+    """变量名 → `{addr, size, section, type}` 或 None。查 `g._elfmap["vars"]`。"""
+    return (get_map(g).get("vars") or {}).get(name)
+
+
 def get_map(g):
     """取会话上那张图; 没建过就抛 —— 静默返回 None 会让每条锚点都变成"解不出来"。"""
     m = getattr(g, "_elfmap", None)

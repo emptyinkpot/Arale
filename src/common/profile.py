@@ -9,7 +9,7 @@ common/profile.py —— 当前活动画像(那块表的"机器条件")的**中�
 每表专属的环境包(换表就换)。后果很具体: **换一块表要改的是 project/,
 可 meterlib 也得跟着 import 一个可能不存在的 project**, 于是"引擎"和"卡带"焊死了。
 
-解法与 `common/varresolve` 完全同构(那儿是"配方/机制"分离, 这儿是"画像/机制"分离):
+解法与 `swdbg/resolve` 完全同构(那儿是"配方/机制"分离, 这儿是"画像/机制"分离):
     机制(怎么用画像)留在 meterlib; 配方(**哪份**画像)由组合根喂进来。
 依赖变成:  project ──→ common.profile ←── meterlib
 两边都指向中立层, 彼此不相识。**本模块不 import meterlib / swdbg / project 中任何一个。**
@@ -58,7 +58,7 @@ common/profile.py —— 当前活动画像(那块表的"机器条件")的**中�
 
     profile.current().RAM_BASE         # 画像属性(每次现取)
     profile.get("OUT_PATH")            # 拿不到给 None(可选属性用这个)
-    profile.need("RAM_VARS", "OUT_PATH")   # 要一串必备属性, 缺了就抛(装配期就炸)
+    profile.need("OUT_PATH")   # 要一串必备属性, 缺了就抛(装配期就炸)
 """
 from common import cardslot
 

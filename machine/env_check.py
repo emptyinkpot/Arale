@@ -364,7 +364,7 @@ def env_check():
 
     # 6) 串口 / 探针 —— **离线识别**(只枚举 + 筛, 不开口、不发帧、不连探针)
     # ⚠ 这一节**有意只答一半**: 它答"驱动层认不认得出候选", **不答"口后面是不是那块表"** ——
-    #   后者要发帧, 是 `python -m project.env_check --online` 与本文件末尾"下一步"里那两个命令的事。
+    #   后者要发帧, 是 `python -m meterlib.cmd_bank smoke` 与本文件末尾"下一步"里那两个命令的事。
     #   把"桥插着"当成"表在", 正是本仓反复治理的那种静默错误。
     try:
         from common import portsel

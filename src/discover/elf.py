@@ -5,7 +5,7 @@ discover/elf.py —— `.out` 里能拿到的一切: 符号(名字/地址/大小
 
 为什么不是重写一份 ELF 解析
 ---------------------------
-符号那一半 `common/elfsym.py` 早就做对了(pyelftools 读 .symtab, STT_OBJECT 落可写节 ⇒ RAM 对象),
+符号那一半由 `swdbg/elf.py` 提供(pyelftools 读 .symtab, STT_OBJECT 落可写节 ⇒ RAM 对象),
 本模块**直接复用, 不抄第二份**。本层只加 `.symtab` 拿不到的东西: **类型与 volatile**。
 这个分工是刻意的 —— `.symtab` 只告诉你"有这么个地址、这么长"; 要判它是不是 `volatile`、
 底层是什么类型, 只有 DWARF 有。
@@ -33,7 +33,9 @@ from __future__ import print_function
 import sys
 
 
-from common import elfsym                              # 符号那一半: 复用, 不重写
+from swdbg import elf as elfsym                              # 符号那一半: 复用, 不重写
+from swdbg.elf import (_str, _type_die, _array_count, _walk_type,
+                      _resolve_type)   # DWARF 类型链: 单一实现住 swdbg.elf, 这里只引用
 
 __all__ = ["Symbol", "symbols", "dwarf", "describe", "cross_check", "sections", "sha256"]
 
@@ -142,15 +144,6 @@ def has_debug(out=None):
 
 
 # ============================ DWARF 层 ============================
-def _str(v):
-    """pyelftools 的 DW_AT_name 有时给 bytes 有时给 str, 统一成 str。"""
-    if v is None:
-        return None
-    if isinstance(v, bytes):
-        return v.decode("utf-8", "replace")
-    return str(v)
-
-
 def _op_addr(die, elf):
     """从 DW_AT_location 里挖 DW_OP_addr 的地址 → int | None。
 
@@ -179,92 +172,6 @@ def _op_addr(die, elf):
             except Exception:
                 return None
     return None
-
-
-def _type_die(die):
-    """解 `die` 的 `DW_AT_type` 指向的类型 DIE。
-
-    ⚠ **必须用 pyelftools 自己的 `die.get_DIE_from_attribute`, 不要手算偏移。**
-    实测(IAR 的 .out): `DW_AT_type` 两种 form 混用 —— 顶层变量多是 `DW_FORM_ref_addr`(全局偏移),
-    而数组的元素类型那种深一跳是 `DW_FORM_ref4`(CU 相对)。手算两种都错, 且**错得很危险**:
-
-        dwarf.get_DIE_from_refaddr(v)                  → 静默给别的 DIE(实测: 该是 INT8U, 解出个枚举)
-        dwarf.get_DIE_from_refaddr(cu.cu_offset + v)   → 报 "not in DIE range of CU"
-
-    前者不抛异常, 会一路把**错的类型名和大小**写进报告 —— 比崩掉坏得多。别手算。
-    """
-    if not (getattr(die, "attributes", {}) or {}).get("DW_AT_type"):
-        return None
-    try:
-        return die.get_DIE_from_attribute("DW_AT_type")
-    except Exception:
-        return None
-
-
-def _array_count(td):
-    """数组元素个数。**`DW_TAG_array_type` 自己没有 `DW_AT_byte_size`**(实测), 长度只在
-    `DW_TAG_subrange_type` 子 DIE 上(count 或 upper_bound+1)。"""
-    try:
-        for ch in td.iter_children():
-            if ch.tag != "DW_TAG_subrange_type":
-                continue
-            a = ch.attributes
-            if "DW_AT_count" in a:
-                return int(a["DW_AT_count"].value)
-            if "DW_AT_upper_bound" in a:
-                return int(a["DW_AT_upper_bound"].value) + 1
-    except Exception:
-        pass
-    return None
-
-
-def _walk_type(dwarf, cu, td, depth=0):
-    """沿类型链走一层层收 → (类型名, 字节大小, volatile, const)。
-
-    实测的典型链(IAR):
-        volatile_type → array_type → typedef(INT8U) → base_type(unsigned char, byte_size=1)
-    命名取**链上第一个有名字的**(typedef 名如 INT8U 比底层 unsigned char 有信息);
-    数组则组合成 `元素名[N]` 并把尺寸算成 元素×个数。
-    """
-    if td is None or depth > 24:                        # 防自引用结构体成环
-        return None, None, None, None
-    tag = getattr(td, "tag", "")
-    a = getattr(td, "attributes", {}) or {}
-
-    volatile = True if tag == "DW_TAG_volatile_type" else None
-    const = True if tag == "DW_TAG_const_type" else None
-
-    inner_name = inner_size = None
-    if "DW_AT_type" in a:
-        in_name, in_size, in_vol, in_const = _walk_type(
-            dwarf, cu, _type_die(td), depth + 1)
-        inner_name, inner_size = in_name, in_size
-        if in_vol:
-            volatile = True
-        if in_const:
-            const = True
-
-    if tag == "DW_TAG_array_type":
-        n = _array_count(td)
-        name = "%s[%s]" % (inner_name or "?", n if n else "?")
-        size = (inner_size * n) if (inner_size and n) else inner_size
-    else:
-        nm = _str(a["DW_AT_name"].value) if "DW_AT_name" in a else None
-        name = nm or inner_name
-        size = None
-        if "DW_AT_byte_size" in a:
-            try:
-                size = int(a["DW_AT_byte_size"].value)
-            except Exception:
-                size = None
-        if size is None:
-            size = inner_size
-    return name, size, volatile, const
-
-
-def _resolve_type(dwarf, cu, die):
-    """变量 DIE → (类型名, 字节大小, volatile, const)。没有 DW_AT_type 或解不动 ⇒ 全 None。"""
-    return _walk_type(dwarf, cu, _type_die(die))
 
 
 def _decl(dwarf, cu, die):

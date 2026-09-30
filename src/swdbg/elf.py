@@ -1,28 +1,20 @@
 # -*- coding: utf-8 -*-
 """
-common/elfsym.py —— 把编译产物 .out(明文 ELF)当"符号表"用(纯离线, 不碰串口/IAR/源码).
+swdbg/elf.py —— 把 .out(明文 ELF)当符号表读。纯离线, 不碰串口/IAR/源码。
 
-2026-09-10 自 meterlib/ 迁来。为什么搬: 这是**纯文件解析**(pyelftools 读 .symtab), 与 645/698/AA80
-协议毫无关系。原先住 meterlib, 后果是 SWD 包(swdbg)想按名定址就被迫依赖串口协议模块 ——
-一条本不该存在的边。它属于中立层。
+.out 由调用方喂, 本模块不猜路径:
+    elf.configure(路径)        # 组合根调一次
+    elf.ram_objects(路径)      # 或每次显式传参, 覆盖已配置值
+两者都没有 → 抛错。
 
-**依赖倒置**: 本模块**不认识 project, 不认识 meterlib**。.out 从哪来, 由调用方喂:
-    elfsym.configure(路径)      # 组合根(入口脚本)调一次, 或由 common.varresolve.configure 代喂
-    elfsym.ram_objects(路径)    # 或每次显式传参, 覆盖已配置值
-两者都没有 → 抛明确错误(而不是悄悄用一个硬编码路径 —— 那正是"换表时读到旧表符号表"的坑)。
+.map 被 IAR TSD 加密(%TSD-Header-###% 开头), 脚本在 IAR 外读不了;
+.out 是明文 ELF, pyelftools 直接解析。
+DWARF 非必需 —— STT_OBJECT + 落在可写节就够当读地址。
 
-背景: 管理芯工程产物在 E:\\My Work\\MengXi\\EZ315-FM33A0610EV-APP\\Build\\...:
-  - .map —— 被 IAR TSD 加密(%TSD-Header-###% 开头), 脚本在 IAR 外读不了;
-  - .out —— 明文 ELF(0x7F 'E' 'L' 'F'), .symtab 里每个全局变量的 名字/地址/大小 都在, pyelftools 直接解析。
-结论: 变量地址从 .out 抽, 不依赖 IAR/.map/宏。
-
-用 C 的 .c/.h 心智看: 这就是"链接器输出里的全局符号地址表"; 本模块只读、无副作用。
-DWARF 非必需 —— STT_OBJECT + 落在可写节 就够给 AA80/SWD 当读地址。(类型/volatile 那层在 discover/elf.py)
-
-CLI(装了 `pip install -e .` 之后从**任何目录**都行; 从前要 `cd src` 或 `PYTHONPATH=src`):
-    python -m common.elfsym --out <路径>          # 摘要: RAM 对象符号总数 + 关键量
-    python -m common.elfsym --out <路径> Frez     # 名字含 Frez 的 RAM 对象符号 (regex, 大小写不敏感)
-    python -m common.elfsym --out <路径> --json 'Recd|kWh|Time'
+CLI:
+    python -m swdbg.elf --out <路径>
+    python -m swdbg.elf --out <路径> Frez
+    python -m swdbg.elf --out <路径> --json 'Recd|kWh|Time'
 
 API:
     configure(out) -> None                            # 装默认 .out 路径(组合根调一次)
@@ -47,7 +39,7 @@ _ELF_CACHE = {}
 
 
 def configure(out):
-    """装默认 .out 路径。组合根(入口脚本 / varresolve.configure)调一次即可。"""
+    """装默认 .out 路径。组合根(入口脚本 / resolve.configure)调一次即可。"""
     global _CONFIGURED_OUT
     _CONFIGURED_OUT = out
 
@@ -61,8 +53,8 @@ def _resolve_out(out):
     path = out or _CONFIGURED_OUT
     if not path:
         raise RuntimeError(
-            "elfsym 未配置 .out 路径。入口脚本应先 elfsym.configure(<画像.OUT_PATH>), "
-            "或调用时显式传 out=；也可由 common.varresolve.configure(out_path=...) 代喂。")
+            "elf 未配置 .out 路径。入口脚本应先 elf.configure(<画像.OUT_PATH>), "
+            "或调用时显式传 out=；也可由 swdbg.resolve.configure(out_path=...) 代喂。")
     return path
 
 
@@ -221,6 +213,122 @@ def wordsum(data):
     return total
 
 
+# ---- DWARF 类型(.out 带调试信息时才有; 读不到一律退空, 不抛) ----
+def _str(v):
+    """pyelftools 的 DW_AT_name 有时给 bytes 有时给 str, 统一成 str。"""
+    if v is None:
+        return None
+    if isinstance(v, bytes):
+        return v.decode("utf-8", "replace")
+    return str(v)
+
+
+def _type_die(die):
+    """解 `die` 的 `DW_AT_type` 指向的类型 DIE。
+
+    MUST 用 pyelftools 的 `get_DIE_from_attribute`, 不许手算偏移: IAR 的 .out 里 `DW_AT_type`
+    两种 form 混用 —— 顶层变量多是 ref_addr(全局偏移), 深一跳的元素类型是 ref4(CU 相对)。
+    手算两种都错, 且**不抛异常、静默给别的 DIE**(该是 INT8U 解出个枚举), 比崩掉坏得多。
+    """
+    if not (getattr(die, "attributes", {}) or {}).get("DW_AT_type"):
+        return None
+    try:
+        return die.get_DIE_from_attribute("DW_AT_type")
+    except Exception:
+        return None
+
+
+def _array_count(td):
+    """数组元素个数。`DW_TAG_array_type` 自己没有 `DW_AT_byte_size`, 长度只在
+    `DW_TAG_subrange_type` 子 DIE 上(count 或 upper_bound+1)。"""
+    try:
+        for ch in td.iter_children():
+            if ch.tag != "DW_TAG_subrange_type":
+                continue
+            a = ch.attributes
+            if "DW_AT_count" in a:
+                return int(a["DW_AT_count"].value)
+            if "DW_AT_upper_bound" in a:
+                return int(a["DW_AT_upper_bound"].value) + 1
+    except Exception:
+        pass
+    return None
+
+
+def _walk_type(dwarf, cu, td, depth=0):
+    """沿类型链走一层层收 → (类型名, 字节大小, volatile, const)。
+
+    实测的典型链(IAR): volatile_type → array_type → typedef(INT8U) → base_type(unsigned char, 1B)
+    命名取**链上第一个有名字的**(typedef 名如 INT8U 比底层 unsigned char 有信息);
+    数组则组合成 `元素名[N]` 并把尺寸算成 元素×个数。
+    """
+    if td is None or depth > 24:                        # 防自引用结构体成环
+        return None, None, None, None
+    tag = getattr(td, "tag", "")
+    a = getattr(td, "attributes", {}) or {}
+
+    volatile = True if tag == "DW_TAG_volatile_type" else None
+    const = True if tag == "DW_TAG_const_type" else None
+
+    inner_name = inner_size = None
+    if "DW_AT_type" in a:
+        in_name, in_size, in_vol, in_const = _walk_type(dwarf, cu, _type_die(td), depth + 1)
+        inner_name, inner_size = in_name, in_size
+        if in_vol:
+            volatile = True
+        if in_const:
+            const = True
+
+    if tag == "DW_TAG_array_type":
+        n = _array_count(td)
+        name = "%s[%s]" % (inner_name or "?", n if n else "?")
+        size = (inner_size * n) if (inner_size and n) else inner_size
+    else:
+        nm = _str(a["DW_AT_name"].value) if "DW_AT_name" in a else None
+        name = nm or inner_name
+        size = None
+        if "DW_AT_byte_size" in a:
+            try:
+                size = int(a["DW_AT_byte_size"].value)
+            except Exception:
+                size = None
+        if size is None:
+            size = inner_size
+    return name, size, volatile, const
+
+
+def _resolve_type(dwarf, cu, die):
+    """变量 DIE → (类型名, 字节大小, volatile, const)。没有 DW_AT_type 或解不动 ⇒ 全 None。"""
+    return _walk_type(dwarf, cu, _type_die(die))
+
+
+def var_types(out=None):
+    """{name: 类型名} —— 从 DWARF 的 DW_TAG_variable 读。.out 没带调试信息就返回 {}。"""
+    elf_ = load(out)
+    try:
+        dw = elf_.get_dwarf_info()
+    except Exception:
+        return {}
+    types = {}
+    try:
+        for cu in dw.iter_CUs():
+            for die in cu.iter_DIEs():
+                if die.tag != "DW_TAG_variable":
+                    continue
+                if "DW_AT_name" not in die.attributes:
+                    continue
+                try:
+                    nm = _str(die.attributes["DW_AT_name"].value)
+                    tn = _resolve_type(dw, cu, die)[0]
+                except Exception:
+                    continue        # 单个变量解不动就跳过, 不许把整趟扫描掐断
+                if nm and tn:
+                    types[nm] = tn
+    except Exception:
+        return types
+    return types
+
+
 # ---- 关键"远程 Watch"候选(先列出来, 供探针/打点脚本用) ----
 CORE_WATCH = ["FrezData", "FrezData2", "RecdData", "g_CurTime", "g_HisTime", "kWhData"]
 
@@ -271,9 +379,6 @@ def main(argv=None):
     return 0
 
 
-# 控制台 UTF-8 单点。实现已迁 common/console.py(2026-09-10) —— **层内引用, 不越界**。
-# (原先这里内联一份, 理由是"common 不得依赖 meterlib"; 现在那份就在 common 里, 理由消失。
-#  别名保原调用点 `_ensure_utf8_stdout()` 一字不改。)
 from common.console import ensure_utf8_stdout
 
 

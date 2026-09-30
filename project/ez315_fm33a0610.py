@@ -36,82 +36,82 @@ RAM_BASE = 0x20000000            # FM33A0610 SRAM 基址
 #   ⚠ .out 的 DWARF 里**没有** IWDT 这个符号(`No symbol "IWDT"`), 所以只能从固件头取常量, 不能按名解析。
 IWDT_SERV = (0x40011400, 0x12345A5A)   # (SERV 寄存器绝对地址, 喂入魔数)
 
-# ============================ ③ RAM 变量地图(白盒 Watch 等价的基础; 固定收此) ============================
-# name: (绝对地址, size, 角色, 中文备注)。地址/size 用 .out 符号核对(2026-09-09)。
+# ==================== ③ 变量角色表(地址由 .out 解析, 此处不记地址) ====================
+# name: (角色, 中文备注)。
 # 角色: watch = 观测变量(Watch 面板等价) / stable = 结算等操作"绝不能碰"的稳定状态全局 /
 #       clock = **时钟派生量**(随日期/时段/结算自动重算, 拨钟试验里必然变, 故不属 stable)。
-RAM_VARS = {
+VAR_INFO = {
     # —— watch: 操作状态(编程态/密钥态) ——
     # 这两个是"当前表处在什么准入状态"的真值源, 2026-09-10 收进画像(原先 0x2000908C 硬编码在
     # scripts/_restore_all.py 里一份):
-    "g_PrgTimer": (0x2000908C, 4, "watch", "厂内/编程态计时器(Is_EnablePrg() 的真值源: TaskRecord.c:687 "
+    "g_PrgTimer": ("watch", "厂内/编程态计时器(Is_EnablePrg() 的真值源: TaskRecord.c:687 "
                                            "`g_PrgTimer[0]!=0`; 645.factory 置非0, 645 0x1F/0F AA 00 清 0)"),
-    "g_KeyStat":  (0x200090A4, 4, "watch", "密钥状态字(0x12345678=KEY_Testing, KEY_Formal=正式密钥); "
+    "g_KeyStat":  ("watch", "密钥状态字(0x12345678=KEY_Testing, KEY_Formal=正式密钥); "
                                            "DLT645App.c:3153 远程清零长帧路拿它当判定, 本台=KEY_Testing"),
     # —— watch: 表钟(低频锁存副本)+ 分钟冻结 FIFO 台账 ——
-    "g_HisTime": (0x20009000, 8, "watch", "表钟·低频锁存副本(冻结取数时点)"),
-    "g_CurTime": (0x200034D0, 8, "watch", "表钟·低频锁存副本(冻结取数时点)"),
-    "g_FrezAdr": (0x200090B0, 2, "watch", "分钟冻结 FIFO 台账·地址"),
-    "g_FrezNum": (0x200090B2, 2, "watch", "分钟冻结 FIFO 台账·数量(域内记账, 非总量)"),
-    "g_FrezLen": (0x200090B4, 2, "watch", "分钟冻结 FIFO 台账·长"),
+    "g_HisTime": ("watch", "表钟·低频锁存副本(冻结取数时点)"),
+    "g_CurTime": ("watch", "表钟·低频锁存副本(冻结取数时点)"),
+    "g_FrezAdr": ("watch", "分钟冻结 FIFO 台账·地址"),
+    "g_FrezNum": ("watch", "分钟冻结 FIFO 台账·数量(域内记账, 非总量)"),
+    "g_FrezLen": ("watch", "分钟冻结 FIFO 台账·长"),
     # 冻结存储信息区(240B 结构体)。**不进 WATCH_VARS**: 240B 超 AA80 单次负载上限 128B,
     # 要按块读时用 named_blocks("s_stFrzStorageInfo", clamp=128) 截读前 128B。
     # (原先该地址硬编码在 4-1 的测试脚本里, 2026-09-10 收进画像当单一事实源。)
-    "s_stFrzStorageInfo": (0x200089E4, 240, "watch", "瞬时冻结存储信息区(整块 240B; AA80 读须 clamp=128)"),
+    "s_stFrzStorageInfo": ("watch", "瞬时冻结存储信息区(整块 240B; AA80 读须 clamp=128)"),
     # —— watch: 最大需量(4-4 的日冻结要看的第二个量: 跨 0 点那一趟之后归没归零) ——
-    "g_MaxDemand": (0x20007AA8, 24, "watch", "各费率最大需量 6 项 × 4B(TaskMetering.c:290; "
+    "g_MaxDemand": ("watch", "各费率最大需量 6 项 × 4B(TaskMetering.c:290; "
                                             "清零点只在 :523 上电 / :3182 / :3210 事件清零, 冻结那一路没有)"),
     # —— clock: 费率号(时钟派生, **不是** stable —— 见 NOTES 第 4 条) ——
-    "g_RateNo":   (0x20009088, 3, "clock", "当前费率号(固件 INT8U[1+2]: [0]=费率号, [1][2]=Fetch_CRC; "
+    "g_RateNo":   ("clock", "当前费率号(固件 INT8U[1+2]: [0]=费率号, [1][2]=Fetch_CRC; "
                                           "每轮 MSG_MinStep 里 Calculate_RateNo() 重算 → 日期一变就变)"),
     # —— 3-1 费率参数与取表中间量(2026-09-10 收进画像; nm 核对: g_ListNo/0x35A4, g_SoltNo/0x35A5,
     #    g_RatePara/0x8FB0 长12 = 8字段+4B Fetch_CRC) ——
     # 这三个正是规格 3-1「观察与判据」点名要 Watch 的量, 收进画像后与 3-2 同一条 AA80 通路读, 免 IAR。
-    "g_ListNo":   (0x200035A4, 1, "clock", "Calculate_RateNo 取到的**日时段表号**(TaskRate.c:258; "
+    "g_ListNo":   ("clock", "Calculate_RateNo 取到的**日时段表号**(TaskRate.c:258; "
                                           "0=未取到。三条取表路径——节假日/周休日/时区——的落点)"),
-    "g_SoltNo":   (0x200035A5, 1, "clock", "Calculate_RateNo 取到的**日时段号**(TaskRate.c:264/270; "
+    "g_SoltNo":   ("clock", "Calculate_RateNo 取到的**日时段号**(TaskRate.c:264/270; "
                                           "命中第几个时段, 用于判『无错位』)"),
-    "g_RatePara": (0x20008FB0, 12, "watch", "费率参数镜像(8字段+4B Fetch_CRC; 偏移 0年时区数 1日时段表数 "
+    "g_RatePara": ("watch", "费率参数镜像(8字段+4B Fetch_CRC; 偏移 0年时区数 1日时段表数 "
                                            "2日时段数 3费率数 4公共假日数 5阶梯数 6周休日特征字 7周休日时段表号) —— "
                                            "规格点名的 g_RatePara[nRateNum] 就是偏移 3"),
     # —— stable: 时段/时区套号 ——
-    "g_ZoneSwNo": (0x200090D7, 1, "stable", "时区套号"),
-    "g_SlotSwNo": (0x200090D8, 1, "stable", "时段套号"),
+    "g_ZoneSwNo": ("stable", "时区套号"),
+    "g_SlotSwNo": ("stable", "时段套号"),
     # —— stable: 继电器 ——
-    "g_RelayCmd": (0x20009090, 4, "stable", "继电器命令"),
-    "g_RelaySta": (0x200090DC, 1, "stable", "继电器状态"),
-    "g_RelayFlg": (0x200090DB, 1, "stable", "继电器标志"),
-    "g_RelayBlk": (0x200035AE, 1, "stable", "继电器动作闭锁标志(0xAA=闭锁: 未接PLC且未达75%Un, 见 relay_precheck)"),
-    "g_CompFlg":  (0x20009020, 5, "stable", "比较标志串[CMP_060Un,065,075,120,ProtI]; "
+    "g_RelayCmd": ("stable", "继电器命令"),
+    "g_RelaySta": ("stable", "继电器状态"),
+    "g_RelayFlg": ("stable", "继电器标志"),
+    "g_RelayBlk": ("stable", "继电器动作闭锁标志(0xAA=闭锁: 未接PLC且未达75%Un, 见 relay_precheck)"),
+    "g_CompFlg":  ("stable", "比较标志串[CMP_060Un,065,075,120,ProtI]; "
                                             "[2]低4位=F → 电压≥75%Un(继电器动作许可)"),
     # 费控状态字。角色取 watch 而不是 stable: 12-3 要**注入**它造"透支"态, 登记成 stable
     # 会让稳定态快照把它当成"该纹丝不动的量"。
-    "g_CashStatus": (0x20009074, 3, "watch", "费控状态字([0]=状态: ST_OvrCash2=4=低于透支门限 / "
+    "g_CashStatus": ("watch", "费控状态字([0]=状态: ST_OvrCash2=4=低于透支门限 / "
                                              "ST_OvrCash1=3=清零后; [1][2]=Fetch_CRC, TaskLclFee.c:121); "
                                              "12-3 阴性对照靠它证明本次**真的**不透支"),
     # —— stable: 控制裁决 / 显示 ——
-    "g_CtrlStat": (0x20003534, 4, "stable", "控制裁决状态字"),
-    "g_DispPara": (0x20008F80, 16, "stable", "显示参数"),
+    "g_CtrlStat": ("stable", "控制裁决状态字"),
+    "g_DispPara": ("stable", "显示参数"),
     # 显示状态机(ST_DISP: 0全显/1轮显/2按显/3定显/4选显/5卡显/6金额/7停显/8测试)。
     # 判 `Disp_Others` 那道闸 `Is_StopDispStatus()`(:3961)用的就是它 —— 读它才知道那一帧画没画。
-    "g_DispStatus": (0x200090CC, 1, "watch", "显示状态机(ST_DISP; TaskDisplay.c:3961 停显区间判据)"),
+    "g_DispStatus": ("watch", "显示状态机(ST_DISP; TaskDisplay.c:3961 停显区间判据)"),
     # 液晶**影子缓冲**(ST75263S.c:9 `INT8U lcd_buffer[LCD_BUFFER_SIZE]`, 2080B=208×10页)。
     # 写像素的只有 `ST75263S_DrawPixel`(读改写 lcd_buffer 并置 lcd_need_refresh), 刷屏每秒钟整块重画。
     # **不进 WATCH_VARS**: 2080B 超 AA80 单次负载上限 128B, 要读只能按块截读(同 s_stFrzStorageInfo 的先例)。
-    "lcd_buffer": (0x200090E0, 2080, "watch", "液晶影子缓冲(整块 2080B; AA80 读须按块 clamp)"),
+    "lcd_buffer": ("watch", "液晶影子缓冲(整块 2080B; AA80 读须按块 clamp)"),
     # —— watch: 13-1 主动上报(2026-09-22 收进画像; 地址/size 逐条 `info address` 核过 .out) ——
     # 全是 TaskReport.c 的文件级 `static __no_init`(都在 RAM, .out 里按名解析得到), 走 AA80/SWD 直读即可,
     # 不必为它们开断点 —— 断点只留给"组帧那一刻缓冲里是什么"(那在 Auto_Report 的栈上, 见 13-1 规格)。
-    "g_ReportEn": (0x20008FC8, 9, "watch", "上报使能(总开关/事件/通道; TaskReport.c:85 `[LEN_ReportEn+2]` 尾 2B 是 CRC)。"
+    "g_ReportEn": ("watch", "上报使能(总开关/事件/通道; TaskReport.c:85 `[LEN_ReportEn+2]` 尾 2B 是 CRC)。"
                                            "13-1 的前置: [1]!=1 或 [3+PT_PLC_M]!=1 就不上送"),
-    "g_AutoRptNum": (0x2000909C, 4, "watch", "轮询上报计数(TaskReport.c:99, 尾 2B CRC): [0]=事件[n] / [1]=掉电[n]"),
-    "g_FollowSta": (0x20008AD4, 28, "watch", "跟随上报状态字(TaskReport.c:91, 按通道 [PT_Num+1]=28B) —— "
+    "g_AutoRptNum": ("watch", "轮询上报计数(TaskReport.c:99, 尾 2B CRC): [0]=事件[n] / [1]=掉电[n]"),
+    "g_FollowSta": ("watch", "跟随上报状态字(TaskReport.c:91, 按通道 [PT_Num+1]=28B) —— "
                                             "规格点名的『跟随上报状态字』就是它"),
-    "g_ReportIdx": (0x20008524, 504, "watch", "上报事件索引表(TaskReport.c:88 `[PT_Num][NUM_RptObj]`, 504B; "
+    "g_ReportIdx": ("watch", "上报事件索引表(TaskReport.c:88 `[PT_Num][NUM_RptObj]`, 504B; "
                                               "AA80 读须按块 clamp, 见 s_stFrzStorageInfo 的先例) —— "
                                               "规格点名的『新增上报事件列表』的落点"),
-    "g_AutoRptGap": (0x200090DE, 1, "watch", "轮询上报间隔剩余(初值 C_AutoRptGap=10s, TaskReport.c:76)"),
-    "g_CheckAutoRptSta": (0x200090DF, 1, "watch", "轮询上报进行中标志(TaskReport.c:101)"),
+    "g_AutoRptGap": ("watch", "轮询上报间隔剩余(初值 C_AutoRptGap=10s, TaskReport.c:76)"),
+    "g_CheckAutoRptSta": ("watch", "轮询上报进行中标志(TaskReport.c:101)"),
 }
 WATCH_VARS = ["g_HisTime", "g_CurTime", "g_FrezAdr", "g_FrezNum", "g_FrezLen"]
 STABLE_VARS = ["g_ZoneSwNo", "g_SlotSwNo", "g_RelayCmd",
@@ -121,12 +121,11 @@ STABLE_VARS = ["g_ZoneSwNo", "g_SlotSwNo", "g_RelayCmd",
 CLOCK_VARS = ["g_RateNo"]
 
 # ============================ ④ 工程固有资源路径 + 备注(描述性数据) ============================
-OUT_PATH = (r"E:\My Work\MengXi\EZ315-FM33A0610EV-APP"
-            r"\Build\EZ315-FM33A0610EV-APP\EZ315-FM33A0610EV-APP.out")
+OUT_PATH = r"E:\tmp_out_test\app.out"
 # 本表"已验证帧"注册文件(叠加层, 同包内, 与画像同前缀): cmd_bank 把它当该表环境帧合并进目录,
 # 纯静态已验证帧贴这。路径相对本画像所在包目录解析(引擎按 dirname(P.__file__)+本文件名算), 包整体可搬。
 FRAMES_FILE = "ez315_fm33a0610.frames.json"
-# 本表"环境清单"(固件锁/双芯可达/串口): env_check 读取作装包即验断言; 机器数据, 非给人读的知识。
+# 本表"环境清单"(固件锁/双芯可达/串口); 机器数据, 非给人读的知识。
 META_FILE = "ez315_fm33a0610.meta.json"
 
 # ---- 本表私有知识的位置(2026-09-14 收进卡带) ----

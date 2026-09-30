@@ -42,7 +42,7 @@ import sys
 from common import loglabel        # 字形(调试行 `[调试] [SWD] …`)的唯一定义处
 from meterlib import cmd_bank       # 帧目录 + 语义动词积木(本脚本只用 aa80_vs_swd_compare)
 from common import trial          # 运行外壳: argv/日志/账本/串口/退出码
-from common import varresolve      # 变量名→地址: 全仓唯一那份解析器
+from swdbg import resolve as varresolve      # 变量名→地址: 全仓唯一那份解析器
 from project import CURRENT          # 本工程画像: 变量集与地址的单一事实源
 from swdbg.probe import Probe             # J-Link 会话(只读原语 read_abs)
 
@@ -58,7 +58,7 @@ def _names():
 
 def part_aa80_vs_swd(ctx):
     """一段 = 本脚本的全部条目: 逐变量三次读 + 逐条判定(判定在库内)。"""
-    # ⚠ 地址解析已在 import `ez_meter` 时装配(它是全仓唯一的 `common.varresolve` 装配点):
+    # ⚠ 地址解析已在 import `ez_meter` 时装配(它是全仓唯一的 `swdbg.resolve` 装配点):
     #   于是探针侧与串口侧取的是**同一个**解析器, 不可能一边按 A 地址读、一边按 B 地址读。
     names = _names() or (list(CURRENT.WATCH_VARS) + list(CURRENT.STABLE_VARS))
     with Probe() as pb:

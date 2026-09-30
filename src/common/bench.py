@@ -6,19 +6,13 @@ bench.py —— 台面体检: 一条命令问清 "串口和 SWD 两条链路现�
 `project/tests/` 那本子册子里的测试子项) —— 随时可单独喊, 不跟着某一项测试走。
 `project/tests/_suite.py` 要在每项之前插一次, 直接 import 本模块调 `check_bench` 就行。
 
-本模块是**组装点**: 它把底下三样已经各自成家的东西按次序装起来, 自己不持有任何东西 ——
-画像断言在 `project.env_check`, 串口参数与选口在 `common.portsel`, 探针判据与选探针在
-`swdbg.probesel`。换一块表、换一支探针, 本文件一个字不用改。
+本模块是**组装点**: 串口参数与选口在 `common.portsel`, 探针判据与选探针在 `swdbg.probesel`。
 
-四步各答一个问题:
+三步各答一个问题:
 
-    ① 离线断言   画像字段 + 帧清单 + 固件声明与 .out 指纹   —— 不碰硬件
-    ② 串口       COM3 后面是不是本表(证明本身含读一次表钟) —— `portsel.open_com`
-    ③ 探针       探针后面是不是本表那颗核(读 CPUID)        —— `probesel.pick`
-    ④ SWD 三关   FPB 断点 + DWT 观察点还挂得上吗           —— `swdbg.selfcheck`(仅 full)
-
-⚠ ① 不许省掉: 画像或 `.out` 被换过时, ② ③ 照样会通 —— 那时"通了"是假象, 后面每一条测试都在
-  对着一份过期的声明跑。所以离线断言不过就停在那儿, 不去碰硬件。
+    ① 串口       COM3 后面是不是本表(证明本身含读一次表钟) —— `portsel.open_com`
+    ② 探针       探针后面是不是本表那颗核(读 CPUID)        —— `probesel.pick`
+    ③ SWD 三关   FPB 断点 + DWT 观察点还挂得上吗           —— `swdbg.selfcheck`(仅 full)
 
 ⚠ 任一步不过就**就地收摊**, 后面的步不跑: 它们必然也过不了, 接着跑只是白等超时。
 
@@ -28,18 +22,8 @@ bench.py —— 台面体检: 一条命令问清 "串口和 SWD 两条链路现�
 import time
 
 
-def check_env():
-    """① 离线断言 → (ok, 说明)。不碰硬件。"""
-    from project import env_check
-    rows = list(env_check.env_check(online=False))
-    bad = [m for ok, m in rows if not ok]
-    if bad:
-        return False, "\n".join("· %s" % m for m in bad)
-    return True, "%d 条断言全过。" % len(rows)
-
-
 def check_serial():
-    """② 串口: 开 COM3 并证明口后面是本表 → (ok, 说明)。
+    """① 串口: 开 COM3 并证明口后面是本表 → (ok, 说明)。
 
     那个证明本身就含读一次表钟 —— `portsel` 会把 "· COM3 应了, 表钟=…" 打在它自己那两行
     `[串口]` 里。所以这里**不再重复读一遍**(同一件事读两次只是多占一次连接)。
@@ -56,7 +40,7 @@ def check_serial():
 
 
 def check_probe():
-    """③ 探针: 证明探针后面是本表那颗核(读 CPUID) → (ok, 说明)。
+    """② 探针: 证明探针后面是本表那颗核(读 CPUID) → (ok, 说明)。
 
     走到这儿就说明已经证明过了 —— `pick()` 是 "判据 → 候选 → 逐个真连读 CPUID → 恰好一支",
     读不到就抛, 不会带着没证明过的探针往下走。
@@ -67,7 +51,7 @@ def check_probe():
 
 
 def check_swd():
-    """④ SWD 三关(开一场 gdb 会话): 探针 / FPB 断点 / DWT 观察点 → (ok, 说明)。
+    """③ SWD 三关(开一场 gdb 会话): 探针 / FPB 断点 / DWT 观察点 → (ok, 说明)。
 
     交给 `swdbg.selfcheck`, 不在这里重写一遍 —— 一处实现, 免得两边哪天对不上。
     """
@@ -113,7 +97,7 @@ class Report:
 
 def _steps(want_serial, want_probe, full):
     """这一次要跑的步, 按次序。`full` 只对探针那半边有意义。"""
-    todo = [Step("离线断言", check_env)]
+    todo = []
     if want_serial:
         todo.append(Step("串口", check_serial))
     if want_probe:

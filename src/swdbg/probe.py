@@ -4,7 +4,7 @@ swdbg/probe.py —— 管理芯 SWD 直读原语(**门面**: 自动认出该用�
 
 这是 swdbg 的【最底层】: 只负责"连上探针、按绝对地址读出字节、干净退出"。
 不含任何电表语义(不知道什么是 g_FrezNum, 也不知道 698) —— 变量名→地址的解析在中立层
-common.varresolve, 与串口 AA80 白盒的对照在
+swdbg.resolve; 与串口 AA80 白盒的对照在
 scripts/_check_aa80_vs_swd.py(那是表的属性, 刻意不放在本包里)。
 
 两端(2026-09-20 起)

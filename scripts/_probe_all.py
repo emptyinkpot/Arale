@@ -45,7 +45,7 @@ _probe_all.py —— **批量**探测: 喂一个目录/一批 `.out` → 一镜�
 退回 `.ewp` 所在目录, **那是猜**。
 
 `--from-project` 换成**读卡带声明**(`project/firmware.py` → 画像 `OUT_PATH` + meta 的
-`firmware` 块): 有声明用声明, 推导只当兜底 —— 与 `common/varresolve` 的「画像优先、`.out`
+`firmware` 块): 有声明用声明, 推导只当兜底 —— 与 `swdbg/resolve` 的「画像优先、`.out`
 回退」同构。同时多出一道**指纹判定**: 声明的 `out_sha256` 与盘上 `.out` 实算不符就**拒绝探测**
 (`--force` 才过), 把"读到旧固件"这个静默错误堵在入口。
 

@@ -125,7 +125,7 @@ def _find_row_bounds(lines):
 def _subitem_of(item):
     """编号 → 子项文字。从 `_suite.py` 的 `ITEMS` **现抠**(AST, 不 import —— 那是个脚本)。
 
-    子项的唯一住处就是那份册子; 本工具不另抄一份, 也不去翻 ledgers 文本。
+    子项的唯一住处就是那份册子; 本工具不另抄一份。
     """
     import ast
     from common import profile

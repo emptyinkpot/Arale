@@ -62,7 +62,8 @@ from meterlib import cmd_bank            # 协议/动词层
 from common.cli import guard_argv              # 入口参数守卫(机制, 不认表)
 from common.portsel import open_com         # 串口
 from swdbg import restore                # SWD 恢复(放行核心 + 清 FPB)
-from project import CURRENT               # 画像: g_PrgTimer 地址(唯一事实源, 库不认表)
+from swdbg import resolve as varresolve        # 变量名→地址(.out 符号表)
+from project import CURRENT               # 画像(库不认表)
 from common import machspec              # 装机卡带: 串口口名等"这台机器"的事实(与表画像正交)
 
 # ---- 子项参数(纯数据) ----
@@ -79,10 +80,10 @@ from common.console import ensure_utf8_stdout
 
 def _prgtimer():
     """SWD 直读 g_PrgTimer 头 1 字节(Is_EnablePrg() 的真值源)。读不到回 None(不抛)。
-    地址取自画像 `RAM_VARS`(单一事实源) —— 别在这儿写 0x2000908C。"""
+    地址由 .out 符号表解析 —— 别在这儿写死地址。"""
     try:
         from swdbg import probe
-        addr = CURRENT.RAM_VARS["g_PrgTimer"][0]
+        addr = varresolve.resolve("g_PrgTimer")[0]
         with probe.Probe() as p:
             b = p.read_abs(addr, 4)
         return None if b is None else b[0]
